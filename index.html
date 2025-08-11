@@ -76,7 +76,7 @@
     .calendar-grid > div.day.holiday > span.holiday-number {
         color: var(--holiday-color);
         font-weight: 700;
-        text-decoration: underline; /* garis bawah tambahan */
+        text-decoration: underline;
     }
     .calendar-grid > div.day:hover {
         background: var(--accent-color);
@@ -96,21 +96,42 @@
         color: var(--accent-color);
     }
 
+    /* Kotak deskripsi hari libur */
     #holidayDescription {
         display: none;
         max-width: 600px;
         margin: 10px auto;
-        padding: 10px;
+        padding: 12px 15px;
         font-size: 1rem;
-        min-height: 40px;
-        color: var(--holiday-color);
-        border: 1px solid var(--holiday-color);
-        border-radius: 6px;
-        background: var(--holiday-bg, #feeaea);
+        min-height: 60px;
+        color: var(--text-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 8px;
+        background: var(--bg-desc, #e3f2fd);
         user-select: text;
+        box-shadow: 0 4px 8px rgb(26 115 232 / 0.2);
+        transition: background 0.3s, color 0.3s;
     }
     body.dark #holidayDescription {
-        --holiday-bg: #3b1f1f;
+        --bg-desc: #1e293b;
+        color: #bbdefb;
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 12px rgb(144 202 249 / 0.6);
+    }
+
+    /* Paragraf khusus untuk nama hari libur */
+    #holidayDescription .desc-holiday {
+        font-weight: 700;
+        color: var(--holiday-color);
+        margin-bottom: 8px;
+        font-size: 1.1rem;
+    }
+
+    /* Paragraf khusus untuk selisih hari */
+    #holidayDescription .desc-diff {
+        font-style: italic;
+        color: var(--accent-color);
+        font-size: 0.95rem;
     }
 
     /* Tombol dan input */
@@ -235,21 +256,41 @@ function renderCalendar() {
 
 function addHolidayClickListeners() {
     const holidayDesc = document.getElementById("holidayDescription");
+    const today = new Date();
+    today.setHours(0,0,0,0); // normalize hari ini tanpa waktu
 
-    // Klik hari libur tampilkan keterangan dan show kotak
-    document.querySelectorAll(".calendar-grid > div.day.holiday").forEach(dayEl => {
+    document.querySelectorAll(".calendar-grid > div.day").forEach(dayEl => {
         dayEl.addEventListener("click", () => {
             const desc = dayEl.getAttribute("data-desc");
-            const date = dayEl.getAttribute("data-date");
-            holidayDesc.textContent = `${date}: ${desc}`;
-            holidayDesc.style.display = "block"; // tampilkan kotak
-        });
-    });
+            const dateStr = dayEl.getAttribute("data-date");
 
-    // Klik hari biasa sembunyikan kotak keterangan
-    document.querySelectorAll(".calendar-grid > div.day:not(.holiday)").forEach(dayEl => {
-        dayEl.addEventListener("click", () => {
-            holidayDesc.style.display = "none"; // sembunyikan kotak
+            if (!dateStr) {
+                holidayDesc.style.display = "none";
+                return;
+            }
+
+            const clickedDate = new Date(dateStr);
+            clickedDate.setHours(0,0,0,0);
+
+            const diffTime = clickedDate.getTime() - today.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            // Buat teks selisih hari yang lebih deskriptif
+            let diffText = "";
+            if (diffDays > 0) {
+                diffText = `${diffDays} hari lagi dari hari ini.`;
+            } else if (diffDays === 0) {
+                diffText = "Hari ini.";
+            } else {
+                diffText = `${Math.abs(diffDays)} hari yang lalu.`;
+            }
+
+            // Pisah bagian hari libur dan selisih hari
+            let holidayHTML = desc ? `<p class="desc-holiday">${desc}</p>` : `<p class="desc-holiday">Tidak ada hari libur pada tanggal ini.</p>`;
+            let diffHTML = `<p class="desc-diff">${diffText}</p>`;
+
+            holidayDesc.innerHTML = `${holidayHTML}${diffHTML}`;
+            holidayDesc.style.display = "block";
         });
     });
 }
