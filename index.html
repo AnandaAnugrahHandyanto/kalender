@@ -181,7 +181,7 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  /* Hamburger menu style */
+
   #menuToggle {
     position: fixed;
     bottom: 20px;
@@ -201,6 +201,7 @@
   #menuToggle.open {
     background-color: #555;
   }
+
   #menuPanel {
     position: fixed;
     bottom: 80px;
@@ -256,6 +257,7 @@
   #menuPanel button:hover {
     background: #5aa3f7;
   }
+
   /* Modal styles */
   #eventModal {
     display: none;
@@ -323,6 +325,7 @@
   #eventModal button[type=submit]:hover {
     background: #5aa3f7;
   }
+
   /* Toast style */
   #toast {
     position: fixed;
@@ -342,6 +345,120 @@
   #toast.show {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  #menuToggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent-color);
+    border: none;
+    border-radius: 50%;
+    width: 54px;
+    height: 54px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.28s cubic-bezier(.2,.9,.3,1), transform 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #menuToggle:hover { transform: scale(1.06); }
+
+  /* three-bar */
+  #menuToggle .bar {
+    width: 26px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    position: relative;
+    transition: transform 0.28s ease, background 0.28s ease;
+  }
+  #menuToggle .bar::before,
+  #menuToggle .bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 26px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: transform 0.28s ease, top 0.28s ease, opacity 0.28s ease;
+  }
+  #menuToggle .bar::before { top: -8px; }
+  #menuToggle .bar::after { top: 8px; }
+
+  /* open state -> X */
+  #menuToggle.open .bar { background: transparent; }
+  #menuToggle.open .bar::before {
+    transform: rotate(45deg);
+    top: 0;
+  }
+  #menuToggle.open .bar::after {
+    transform: rotate(-45deg);
+    top: 0;
+  }
+
+  /* Panel menu with slide-up + blur + subtle scale */
+  #menuPanel {
+    position: fixed;
+    bottom: 84px;
+    right: 20px;
+    background: rgba(18,18,18,0.72);
+    backdrop-filter: blur(10px) saturate(120%);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 260px;
+    max-width: 92vw;
+    color: white;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(22px) scale(0.985);
+    transition: opacity 260ms cubic-bezier(.2,.9,.3,1), transform 260ms cubic-bezier(.2,.9,.3,1);
+    z-index: 1000;
+  }
+  #menuPanel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+  #menuPanel label,
+  #menuPanel select,
+  #menuPanel button {
+    display: block;
+    width: 100%;
+    margin-bottom: 12px;
+    font-size: 1rem;
+  }
+  #menuPanel input[type=checkbox] { margin-right: 8px; transform: scale(1.1); vertical-align: middle; }
+  #menuPanel select {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.03);
+    color: white;
+    cursor: pointer;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  #menuPanel button {
+    padding: 10px 0;
+    background: linear-gradient(180deg, var(--accent-color), rgba(90,163,247,0.9));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(33,150,243,0.12), inset 0 -2px 6px rgba(0,0,0,0.12);
+  }
+  #menuPanel button:hover { transform: translateY(-1px); }
+  /* small responsive tweak */
+  @media (max-width:420px) {
+    #menuToggle { right: 14px; bottom: 18px; width:50px; height:50px; }
+    #menuPanel { right: 12px; width: 88vw; bottom: 78px; }
   }
 </style>
 </head>
@@ -366,7 +483,10 @@
 
 <div id="holidayDescription" role="region" aria-live="polite" aria-atomic="true" style="display:none;"></div>
 
-<button id="menuToggle" aria-label="Toggle Menu" aria-expanded="false">☰</button>
+<!-- Tombol hamburger: diganti jadi tiga-bar animated icon (tetap id dan atribut sama agar JS tetap berfungsi) -->
+<button id="menuToggle" aria-label="Toggle Menu" aria-expanded="false">
+  <div class="bar" aria-hidden="true"></div>
+</button>
 <div id="menuPanel" aria-hidden="true">
   <label><input type="checkbox" id="filterHoliday" checked /> Tampilkan Libur Nasional</label>
   <label><input type="checkbox" id="filterManual" checked /> Tampilkan Event Manual</label>
@@ -609,6 +729,33 @@
   themeSelect.addEventListener("change", e => {
     applyTheme(e.target.value);
   });
+
+  // apply theme CSS variables
+  const style = document.createElement('style');
+  style.textContent = `
+    body.theme-blue {
+      --accent-color: #90caf9;
+      --holiday-color: #ff8a80;
+      --neon-green: #39ff14;
+      background-color: #121212;
+      color: #fff;
+    }
+    body.theme-green {
+      --accent-color: #80c99b;
+      --holiday-color: #d46a6a;
+      --neon-green: #00ff44;
+      background-color: #121212;
+      color: #fff;
+    }
+    body.theme-purple {
+      --accent-color: #b07de8;
+      --holiday-color: #e87db0;
+      --neon-green: #bbff00;
+      background-color: #121212;
+      color: #fff;
+    }
+  `;
+  document.head.appendChild(style);
   applyTheme(themeSelect.value);
 
   // Add manual event modal open
@@ -654,32 +801,6 @@
       toast.classList.remove("show");
     }, 2500);
   }
-
-  const style = document.createElement('style');
-  style.textContent = `
-    body.theme-blue {
-      --accent-color: #90caf9;
-      --holiday-color: #ff8a80;
-      --neon-green: #39ff14;
-      background-color: #121212;
-      color: #fff;
-    }
-    body.theme-green {
-      --accent-color: #80c99b;
-      --holiday-color: #d46a6a;
-      --neon-green: #00ff44;
-      background-color: #121212;
-      color: #fff;
-    }
-    body.theme-purple {
-      --accent-color: #b07de8;
-      --holiday-color: #e87db0;
-      --neon-green: #bbff00;
-      background-color: #121212;
-      color: #fff;
-    }
-  `;
-  document.head.appendChild(style);
 
   (async function init() {
     await checkAndRender();
