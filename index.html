@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kalender Libur Nasional</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0; padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background 0.3s, color 0.3s;
+    }
+    :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --accent-color: #1a73e8;
+        --holiday-color: #e53935;
+    }
+    body.dark {
+        --bg-color: #121212;
+        --text-color: #ffffff;
+        --accent-color: #90caf9;
+        --holiday-color: #ff8a80;
+    }
+    header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: var(--accent-color);
+        color: white;
+        gap: 10px;
+    }
+    header h1 {
+        flex: 1 1 auto;
+        margin: 0;
+        text-align: center;
+        min-width: 180px;
+    }
+    .calendar {
+        max-width: 600px;
+        margin: auto;
+        padding: 10px;
+    }
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+    .calendar-grid > div {
+        text-align: center;
+        user-select: none;
+    }
+    .calendar-grid > div.header-day {
+        font-weight: bold;
+        font-size: 0.9rem;
+        padding: 5px 0;
+        border-bottom: 2px solid var(--accent-color);
+    }
+    .calendar-grid > div.day {
+        padding: 12px 6px;
+        border-radius: 6px;
+        font-size: 1rem;
+        line-height: 1.2;
+        position: relative;
+        cursor: default;
+        transition: background 0.2s, color 0.2s;
+    }
+    .calendar-grid > div.day.holiday {
+        background: var(--holiday-color);
+        color: white;
+    }
+    .calendar-grid > div.day:hover {
+        background: var(--accent-color);
+        color: white;
+        cursor: pointer;
+    }
+    /* Tooltip sederhana untuk keterangan hari libur */
+    .calendar-grid > div.day .holiday-tooltip {
+        visibility: hidden;
+        opacity: 0;
+        background-color: var(--holiday-color);
+        color: white;
+        text-align: center;
+        border-radius: 4px;
+        padding: 3px 6px;
+        font-size: 0.75rem;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 6px;
+        white-space: nowrap;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        z-index: 10;
+    }
+    .calendar-grid > div.day:hover .holiday-tooltip {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    /* Tombol dan input */
+    .controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    button {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 5px;
+        background: var(--accent-color);
+        color: white;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #145dbf;
+    }
+    input[type=number] {
+        width: 80px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        border: none;
+        font-size: 1rem;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+<header>
+    <button id="prevMonth" title="Bulan sebelumnya">⟨</button>
+    <h1 id="monthYear"></h1>
+    <button id="nextMonth" title="Bulan berikutnya">⟩</button>
+    <div class="controls">
+        <input type="number" id="yearInput" min="1900" max="2100" step="1" title="Masukkan tahun" />
+        <button id="goYearBtn" title="Lihat tahun">Lihat Tahun</button>
+    </div>
+    <button id="toggleMode" title="Toggle mode gelap/terang">🌙</button>
+</header>
+<div class="calendar">
+    <div class="calendar-grid" id="calendarDays"></div>
+</div>
+
+<script>
+const apiKey = "AIzaSyCHdJfqVSd-1rQ1wbbp7uaJwk9Ty2iWRAE";
+const calendarId = "id.indonesian#holiday@group.v.calendar.google.com";
+
+let currentDate = new Date();
+let holidays = {};
+const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+async function fetchHolidays(year) {
+    const timeMin = `${year}-01-01T00:00:00Z`;
+    const timeMax = `${year}-12-31T23:59:59Z`;
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
+    const res = await fetch(url);
+    const data = await res.json();
+    holidays = {};
+    if (data.items) {
+        data.items.forEach(event => {
+            const date = event.start.date;
+            holidays[date] = event.summary;
+        });
+    }
+}
+
+function renderCalendar() {
+    const monthYear = document.getElementById("monthYear");
+    const calendarDays = document.getElementById("calendarDays");
+    calendarDays.innerHTML = "";
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    monthYear.textContent = currentDate.toLocaleString("id-ID", { month: "long", year: "numeric" });
+
+    // Header nama hari
+    dayNames.forEach(day => {
+        calendarDays.innerHTML += `<div class="header-day">${day}</div>`;
+    });
+
+    // Kosongkan sebelum tanggal 1
+    for (let i = 0; i < firstDay; i++) {
+        calendarDays.innerHTML += `<div></div>`;
+    }
+
+    // Tanggal dan libur
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const dateObj = new Date(year, month, day);
+        const isSunday = dateObj.getDay() === 0;
+        const isHoliday = holidays[dateStr];
+        const holidayClass = (isSunday || isHoliday) ? "holiday" : "";
+
+        calendarDays.innerHTML += `
+            <div class="day ${holidayClass}">
+                ${day}
+                ${isHoliday ? `<div class="holiday-tooltip">${holidays[dateStr]}</div>` : ""}
+            </div>
+        `;
+    }
+}
+
+document.getElementById("prevMonth").addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    checkAndRender();
+});
+document.getElementById("nextMonth").addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    checkAndRender();
+});
+document.getElementById("toggleMode").addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+});
+
+document.getElementById("goYearBtn").addEventListener("click", () => {
+    const inputYear = parseInt(document.getElementById("yearInput").value);
+    if (inputYear >= 1900 && inputYear <= 2100) {
+        currentDate.setFullYear(inputYear);
+        currentDate.setMonth(0); // Reset ke Januari supaya jelas
+        checkAndRender();
+    } else {
+        alert("Masukkan tahun antara 1900 sampai 2100.");
+    }
+});
+
+// Set input tahun default ke tahun sekarang
+document.getElementById("yearInput").value = currentDate.getFullYear();
+
+async function checkAndRender() {
+    const year = currentDate.getFullYear();
+    await fetchHolidays(year);
+    renderCalendar();
+}
+
+checkAndRender();
+</script>
+</body>
+</html>
