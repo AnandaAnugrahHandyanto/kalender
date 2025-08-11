@@ -153,6 +153,32 @@
         font-size: 1rem;
         text-align: center;
     }
+
+    /* Animasi swipe */
+    @keyframes slideLeftOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(-100%); opacity: 0; }
+    }
+    @keyframes slideRightOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(var(--start-pos)); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .calendar-grid.animating {
+      pointer-events: none;
+    }
+    .calendar-grid.slide-left-out {
+      animation: slideLeftOut 0.25s forwards;
+    }
+    .calendar-grid.slide-right-out {
+      animation: slideRightOut 0.25s forwards;
+    }
+    .calendar-grid.slide-in {
+      animation: slideIn 0.25s forwards;
+    }
 </style>
 </head>
 <body>
@@ -286,12 +312,10 @@ function addHolidayClickListeners() {
 }
 
 document.getElementById("prevMonth").addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    checkAndRender();
+    animateSlide('right');
 });
 document.getElementById("nextMonth").addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    checkAndRender();
+    animateSlide('left');
 });
 document.getElementById("toggleMode").addEventListener("click", () => {
     document.body.classList.toggle("dark");
@@ -326,12 +350,42 @@ function handleSwipeGesture() {
     const minSwipeDistance = 40;
 
     if (swipeDistance > minSwipeDistance) {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        checkAndRender();
+        animateSlide('right');
     } else if (swipeDistance < -minSwipeDistance) {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        checkAndRender();
+        animateSlide('left');
     }
+}
+
+function animateSlide(direction) {
+    calendarGrid.classList.add("animating");
+
+    if (direction === "left") {
+        calendarGrid.classList.add("slide-left-out");
+    } else {
+        calendarGrid.classList.add("slide-right-out");
+    }
+
+    calendarGrid.addEventListener("animationend", function handler() {
+        calendarGrid.removeEventListener("animationend", handler);
+
+        if (direction === "left") {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        } else {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+        }
+
+        checkAndRender().then(() => {
+            calendarGrid.style.setProperty('--start-pos', direction === 'left' ? '100%' : '-100%');
+            calendarGrid.classList.remove("slide-left-out", "slide-right-out");
+            calendarGrid.classList.add("slide-in");
+
+            calendarGrid.addEventListener("animationend", function handlerIn() {
+                calendarGrid.removeEventListener("animationend", handlerIn);
+                calendarGrid.classList.remove("slide-in", "animating");
+                calendarGrid.style.removeProperty('--start-pos');
+            });
+        });
+    });
 }
 
 document.getElementById("yearInput").value = currentDate.getFullYear();
