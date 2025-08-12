@@ -6,11 +6,11 @@
 <title>Kalender Libur Nasional</title>
 <style>
   :root {
-    --bg-color: #121212;
-    --text-color: #ffffff;
-    --accent-color: #90caf9;
-    --holiday-color: #ff8a80;
-    --neon-green: #39ff14;
+    --bg-color: #1a1a1a;
+    --bg-color-light: #282828;
+    --text-color: #f0f0f0;
+    --text-color-muted: #9e9e9e;
+    --border-color: rgba(255, 255, 255, 0.1);
   }
   body {
     margin: 0;
@@ -21,10 +21,10 @@
     overflow-x: hidden;
   }
   header {
-    background: var(--accent-color);
-    color: white;
-    padding: 8px;
+    background: var(--bg-color-light);
+    padding: 12px 16px;
     user-select: none;
+    border-bottom: 1px solid var(--border-color);
   }
   .top-row {
     display: flex;
@@ -34,194 +34,293 @@
   .month-title {
     flex: 1;
     text-align: center;
-    font-size: 1.3rem;
-    font-weight: bold;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-color);
   }
   .month-btn {
-    background: white;
-    color: var(--accent-color);
-    border: none;
-    border-radius: 5px;
-    font-size: 1.2rem;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    font-size: 1.4rem;
     font-weight: bold;
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
   }
   .month-btn:hover {
-    background: var(--accent-color);
-    color: white;
+    background-color: rgba(255,255,255,0.05);
+    border-color: var(--accent-color);
+  }
+  .month-btn:active, .control-btn:active {
+    transform: scale(0.95);
   }
   .bottom-row {
-    margin-top: 6px;
+    margin-top: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
   input[type=number] {
-    width: 70px;
-    padding: 4px;
-    border-radius: 5px;
-    border: none;
+    width: 75px;
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: #333;
+    color: var(--text-color);
     text-align: center;
+    font-size: 1rem;
+    -moz-appearance: textfield;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
   .control-btn {
-    padding: 5px 10px;
+    padding: 6px 12px;
     border: none;
-    border-radius: 5px;
-    background: white;
-    color: var(--accent-color);
+    border-radius: 8px;
+    background: var(--accent-color);
+    color: white;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
   }
-  .control-btn:hover {
-    background: var(--accent-color);
-    color: white;
+  .control-btn#resetBtn {
+      background: #444;
+      color: var(--text-color);
+  }
+  .control-btn#resetBtn:hover {
+      background: #555;
   }
   .calendar {
     max-width: 600px;
-    margin: 12px auto;
+    margin: 16px auto;
     padding: 0 10px;
     touch-action: pan-y;
-    position: relative; /* Diperlukan untuk animasi */
-    overflow: hidden;   /* Menyembunyikan grid saat animasi */
-    min-height: 280px;  /* Mencegah lompatan layout saat animasi */
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
   }
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    gap: 6px;
   }
   .calendar-grid > div {
     text-align: center;
   }
   .calendar-grid > div.header-day {
-    font-weight: bold;
-    padding: 5px 0;
-    border-bottom: 2px solid var(--accent-color);
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 8px 0;
+    color: var(--text-color-muted);
   }
   .calendar-grid > div.day {
-    padding: 6px 4px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
     position: relative;
-    outline-offset: 2px;
+    outline: none;
+    padding: 4px 4px 12px 4px;
+  }
+  .calendar-grid > div.day:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent-color);
   }
   .calendar-grid > div.day.selected {
     background-color: var(--accent-color);
     color: white;
+    font-weight: bold;
   }
-  .calendar-grid > div.day.holiday {
+  .calendar-grid > div.day.today .day-number {
+    border: 2px solid var(--accent-color);
+    color: var(--accent-color);
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+  }
+  .day-number {
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      border-radius: 50%;
+      margin: 0 auto;
+      transition: all 0.2s ease;
+  }
+  .calendar-grid > div.day.selected .day-number {
+      border-color: transparent;
+      color: white;
+      background-color: transparent;
+  }
+  .calendar-grid > div.day.is-sunday .day-number {
     color: var(--holiday-color);
     font-weight: bold;
   }
-  .calendar-grid > div.day.today {
-    border: 2px solid var(--accent-color);
+  .calendar-grid > div.day.is-holiday .day-number {
     font-weight: bold;
+    color: var(--holiday-color);
   }
   .pasaran {
     display: block;
-    font-size: 0.6rem;
-    line-height: 1.2rem;
-    min-height: 1.2rem;
-    color: #999;
-    transition: color 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
+    font-size: 0.7rem;
+    line-height: 1;
+    color: var(--text-color-muted);
+    transition: color 0.2s ease;
   }
-  .pasaran.active {
-    font-size: 0.75rem;
-    font-weight: bold;
+  .day.selected .pasaran {
+      color: rgba(255,255,255,0.8);
   }
-  .selected-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
+  .dots-container {
     position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--neon-green);
-    animation: pulse 1.5s infinite ease-in-out;
+    bottom: 3px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    pointer-events: none;
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-    50% { opacity: 0.4; transform: translateX(-50%) scale(1.4); }
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
   }
+  .dot.holiday { background-color: var(--holiday-color); }
+  .dot.manual { background-color: var(--accent-color); }
+  .day.selected .dot.manual { background-color: white; }
+
   #holidayDescription {
     max-width: 600px;
     margin: 12px auto 20px;
     padding: 16px;
     font-size: 1rem;
-    border-radius: 10px;
-    background: rgba(144, 202, 249, 0.08);
+    border-radius: 12px;
+    background: var(--bg-color-light);
     color: var(--text-color);
-    border: 2px solid var(--accent-color);
-    box-shadow: 0 0 8px var(--accent-color);
-    transition: opacity 0.3s ease;
+    border: 1px solid var(--border-color);
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
-  #holidayDescription.holiday-glow {
-    background: rgba(255, 138, 128, 0.08);
-    border-color: var(--holiday-color);
-    box-shadow: 0 0 8px var(--holiday-color);
+  .desc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
   }
-  #holidayDescription .desc-holiday {
-    font-size: 1.2rem;
+  .desc-label {
+    font-size: 0.8rem;
     font-weight: bold;
-    color: var(--holiday-color);
-    margin-bottom: 6px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
   }
-  #holidayDescription .desc-diff {
-    font-size: 0.95rem;
-    font-style: italic;
-    color: var(--accent-color);
+  .desc-label.national-holiday {
+      color: white;
+      background-color: var(--holiday-color);
+  }
+  .desc-label.manual-event {
+      color: white;
+      background-color: var(--accent-color);
+  }
+  .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-color-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, background-color 0.2s;
+  }
+  .delete-btn:hover {
+      color: #ff8a80;
+      background-color: rgba(255, 138, 128, 0.1);
+  }
+  #holidayDescription .desc-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 6px;
+    margin-bottom: 8px;
+  }
+  #holidayDescription .desc-custom {
+      color: var(--text-color);
+      opacity: 0.9;
+      font-size: 0.95rem;
+      margin-top: 4px;
+      word-wrap: break-word;
+  }
+  #holidayDescription .desc-date-info {
+    font-size: 0.9rem;
+    color: var(--text-color-muted);
+    margin-top: 12px;
   }
   .animate-desc {
-    animation: slideFade 0.3s ease;
+    animation: slideFade 0.4s cubic-bezier(0.2, 1, 0.3, 1);
   }
   @keyframes slideFade {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Modal styles */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
     z-index: 1100; justify-content: center; align-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   .modal-overlay.active { display: flex; }
   .modal-content {
-    background: #222; color: white; padding: 20px; border-radius: 10px;
+    background: var(--bg-color-light); color: white; padding: 24px; border-radius: 16px;
     width: 90%; max-width: 400px; box-sizing: border-box; position: relative;
-    animation: modal-pop 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+    animation: modal-pop 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    border: 1px solid var(--border-color);
   }
   @keyframes modal-pop {
     from { opacity: 0; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
   }
   .close-btn {
-    position: absolute; right: 16px; top: 12px; font-size: 28px;
-    cursor: pointer; color: #ccc; user-select: none;
+    position: absolute; right: 16px; top: 16px; font-size: 28px;
+    cursor: pointer; color: var(--text-color-muted); user-select: none;
+    transition: color 0.2s ease;
   }
-  #eventModal label { display: block; margin-top: 12px; }
+  .close-btn:hover { color: white; }
+  
+  #eventModal label, #themeModal h2 { margin-bottom: 16px; }
+  #eventModal label { display: block; margin-top: 16px; font-size: 0.9rem; color: var(--text-color-muted); }
   #eventModal input[type=date], #eventModal input[type=text], #eventModal textarea {
-    width: 100%; padding: 8px; margin-top: 6px; border-radius: 6px;
-    border: none; background: #444; color: white; box-sizing: border-box; font-size: 1rem;
+    width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px;
+    border: 1px solid var(--border-color); background: #333; color: white; box-sizing: border-box; font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  #eventModal textarea { resize: vertical; min-height: 60px; }
+  #eventModal input:focus, #eventModal textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.3);
+  }
+  #eventModal textarea { resize: vertical; min-height: 80px; }
   #eventModal button[type=submit] {
-    margin-top: 16px; background: var(--accent-color); border: none;
-    color: white; padding: 10px; font-weight: bold; border-radius: 6px;
-    cursor: pointer; width: 100%;
+    margin-top: 24px; background: var(--accent-color); border: none;
+    color: white; padding: 12px; font-weight: bold; border-radius: 8px;
+    cursor: pointer; width: 100%; font-size: 1rem;
   }
   
-  /* Toast style */
   #toast {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: var(--accent-color); color: white; padding: 12px 20px;
-    border-radius: 20px; opacity: 0; pointer-events: none;
+    background: #222; color: white; padding: 12px 20px;
+    border-radius: 8px; opacity: 0; pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; z-index: 1200;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
   }
   #toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
 
@@ -230,7 +329,7 @@
     border: none; border-radius: 50%; width: 56px; height: 56px;
     cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     z-index: 1001; display: flex; align-items: center; justify-content: center;
-    transition: background 0.3s cubic-bezier(.2,.9,.3,1), transform 0.3s cubic-bezier(.2,.9,.3,1);
+    transition: all 0.3s cubic-bezier(.2,.9,.3,1);
     -webkit-tap-highlight-color: transparent;
   }
   #menuToggle:hover { transform: scale(1.08) rotate(15deg); }
@@ -270,52 +369,38 @@
   }
   
   .menu-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    border-radius: 12px;
-    transition: background-color 0.2s ease;
+    display: flex; align-items: center; padding: 10px 12px; border-radius: 12px;
+    transition: background-color 0.2s ease, transform 0.1s;
   }
-
-  .menu-item.clickable:hover {
-    background-color: rgba(255, 255, 255, 0.07);
-    cursor: pointer;
-  }
+  .menu-item.clickable { cursor: pointer; }
+  .menu-item.clickable:hover { background-color: rgba(255, 255, 255, 0.07); }
+  .menu-item.clickable:active { transform: scale(0.97); }
   .menu-item svg {
     width: 22px; height: 22px; margin-right: 16px;
     flex-shrink: 0; fill: #e0e0e0;
   }
-  .menu-item > span {
-    flex-grow: 1; color: #f0f0f0; font-weight: 500;
-  }
+  .menu-item > span { flex-grow: 1; color: #f0f0f0; font-weight: 500; }
 
   .toggle-switch {
-    position: relative; display: inline-block;
-    width: 44px; height: 24px; flex-shrink: 0;
-    cursor: pointer;
+    position: relative; display: inline-block; width: 44px; height: 24px;
+    flex-shrink: 0; cursor: pointer;
   }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
   .slider {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(255, 255, 255, 0.2);
+    position: absolute; inset:0; background-color: rgba(255, 255, 255, 0.2);
     transition: 0.3s; border-radius: 24px;
   }
   .slider:before {
-    position: absolute; content: ""; height: 18px; width: 18px;
-    left: 3px; bottom: 3px; background-color: white;
-    transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); border-radius: 50%;
+    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background-color: white; transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); border-radius: 50%;
   }
   input:checked + .slider { background-color: var(--accent-color); }
   input:checked + .slider:before { transform: translateX(20px); }
   
   #currentThemeText {
-    color: var(--accent-color);
-    font-weight: bold;
-    margin-right: 8px;
+    color: var(--accent-color); font-weight: bold; margin-right: 8px;
   }
-  .chevron-icon {
-    fill: #888; width: 18px; height: 18px;
-  }
+  .chevron-icon { fill: #888; width: 18px; height: 18px; }
 
   #addEventBtn {
     display: flex; align-items: center; justify-content: center;
@@ -327,71 +412,45 @@
   }
   #addEventBtn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(var(--accent-color-rgb, 33, 150, 243), 0.3);
+    box-shadow: 0 6px 16px rgba(var(--accent-color-rgb), 0.3);
   }
   #addEventBtn svg { width: 20px; height: 20px; fill: white; }
 
-  /* MODAL PEMILIH TEMA (IMPROVED) */
   .theme-options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px; margin-top: 20px;
   }
   .theme-option {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 15px;
-    border-radius: 12px;
-    border: 2px solid #555;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-    overflow: hidden;
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    gap: 10px; padding: 15px; border-radius: 12px; border: 2px solid #555;
+    cursor: pointer; transition: all 0.2s ease; overflow: hidden;
   }
   .theme-option:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    transform: translateY(-3px);
+    background-color: rgba(255, 255, 255, 0.08); transform: translateY(-3px);
   }
   .theme-option.selected {
-    border-color: var(--accent-color);
-    background-color: rgba(144, 202, 249, 0.1);
+    border-color: var(--accent-color); background-color: rgba(var(--accent-color-rgb), 0.1);
   }
   .theme-option .checkmark-icon {
-    display: none;
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 20px;
-    height: 20px;
-    color: var(--accent-color);
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    padding: 2px;
-    box-sizing: border-box;
+    display: none; position: absolute; top: 6px; right: 6px; width: 20px; height: 20px;
+    color: var(--accent-color); background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%; padding: 2px; box-sizing: border-box;
   }
   .theme-option.selected .checkmark-icon {
-    display: block;
-    animation: pop-in 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+    display: block; animation: pop-in 0.3s cubic-bezier(0.2, 1, 0.3, 1);
   }
   @keyframes pop-in {
     from { transform: scale(0.5); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
   .color-swatch {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.7); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
-  #swatch-blue { background-color: #90caf9; }
-  #swatch-green { background-color: #81c784; }
-  #swatch-purple { background-color: #ba68c8; }
+  #swatch-blue { background: linear-gradient(45deg, #90caf9, #64b5f6); }
+  #swatch-green { background: linear-gradient(45deg, #81c784, #66bb6a); }
+  #swatch-purple { background: linear-gradient(45deg, #ba68c8, #ab47bc); }
 
-  /* ANIMASI GESER KALENDER */
   @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
   @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
@@ -405,11 +464,12 @@
   @media (max-width:420px) {
     #menuToggle { right: 14px; bottom: 18px; width:52px; height:52px; }
     #menuPanel { right: 12px; width: 88vw; bottom: 80px; }
+    .month-title { font-size: 1.3rem; }
   }
 
 </style>
 </head>
-<body class="theme-blue">
+<body>
 
 <header>
   <div class="top-row">
@@ -419,8 +479,8 @@
   </div>
   <div class="bottom-row">
     <input type="number" id="yearInput" min="1900" max="2100" aria-label="Masukkan tahun" />
-    <button id="goYearBtn" class="control-btn">Lihat</button>
-    <button id="resetBtn" class="control-btn">Reset</button>
+    <button id="goYearBtn" class="control-btn">Go</button>
+    <button id="resetBtn" class="control-btn">Hari Ini</button>
   </div>
 </header>
 
@@ -445,7 +505,7 @@
   </div>
   <div class="menu-item">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
-    <span>Event Manual</span>
+    <span>Acara Anda</span>
     <label class="toggle-switch">
       <input type="checkbox" id="filterManual" checked />
       <span class="slider"></span>
@@ -459,22 +519,22 @@
   </div>
   <button id="addEventBtn">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-    <span>Tambah Event</span>
+    <span>Tambah Acara</span>
   </button>
 </div>
 
 <div id="eventModal" class="modal-overlay">
   <div class="modal-content">
     <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
-    <h2 id="modalTitle">Tambah Event Manual</h2>
+    <h2 id="modalTitle">Tambah Acara Anda</h2>
     <form id="eventForm">
       <label for="eventDate">Tanggal:</label>
       <input type="date" id="eventDate" name="eventDate" required />
-      <label for="eventTitle">Judul:</label>
-      <input type="text" id="eventTitle" name="eventTitle" required />
+      <label for="eventTitle">Judul Acara:</label>
+      <input type="text" id="eventTitle" name="eventTitle" required placeholder="Cth: Ulang tahun teman"/>
       <label for="eventDesc">Deskripsi (opsional):</label>
-      <textarea id="eventDesc" name="eventDesc"></textarea>
-      <button type="submit">Simpan Event</button>
+      <textarea id="eventDesc" name="eventDesc" placeholder="Detail acara..."></textarea>
+      <button type="submit">Simpan Acara</button>
     </form>
   </div>
 </div>
@@ -514,10 +574,9 @@
   let holidays = {};
   let manualEvents = {};
   let selectedDateStr = null;
-  let currentTheme = 'theme-blue';
-  let isAnimating = false; // Flag untuk mencegah animasi ganda
+  let isAnimating = false;
 
-  // Inisialisasi Elemen DOM
+  // DOM Elements
   const calendarContainer = document.querySelector(".calendar");
   const holidayDesc = document.getElementById("holidayDescription");
   const calendarGrid = document.getElementById("calendarDays");
@@ -533,7 +592,6 @@
   const themeMenuItem = document.getElementById("themeMenuItem");
   const currentThemeText = document.getElementById("currentThemeText");
 
-  // Fungsi-fungsi Utama
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
     const diffDays = Math.floor((date - refDate) / (1000 * 60 * 60 * 24));
@@ -546,25 +604,29 @@
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
     try {
       const res = await fetch(url);
+      if (!res.ok) throw new Error(`API request failed with status ${res.status}`);
       const data = await res.json();
       holidays = {};
       if (data.items) {
         data.items.forEach(event => { holidays[event.start.date] = event.summary; });
       }
       holidays._year = year;
-    } catch (e) { console.error("Gagal mengambil data libur:", e); }
+    } catch (e) {
+        console.error("Gagal mengambil data libur:", e);
+        showToast("Gagal memuat data libur.");
+    }
   }
 
   function formatDateDMY(dateStr) {
     if (!dateStr) return '';
-    const parts = dateStr.split("-");
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function daysDifference(dateStr) {
     const today = new Date(); today.setHours(0,0,0,0);
     const targetDate = new Date(dateStr); targetDate.setHours(0,0,0,0);
-    return Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
+    return Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
   }
 
   function renderCalendar() {
@@ -589,26 +651,38 @@
       const hasManualEvent = manualEvents[dateStr] !== undefined;
       const showHoliday = filterHoliday.checked && isHoliday;
       const showManual = filterManual.checked && hasManualEvent;
-
-      if (dateObj.getDay() === 0 && !showHoliday) classes.push("holiday");
-      if (showHoliday) classes.push("holiday");
-      if (showManual) classes.push("holiday-manual");
+      
+      if (dateObj.getDay() === 0) classes.push("is-sunday");
+      if (showHoliday) classes.push("is-holiday");
       if (+dateObj === +today) classes.push("today");
       if (selectedDateStr === dateStr) classes.push("selected");
       
       const pasaran = getPasaranJawa(dateObj);
-      let dotHTML = (selectedDateStr === dateStr) ? `<div class="selected-dot"></div>` : "";
-      let title = [showHoliday ? holidays[dateStr] : null, showManual ? manualEvents[dateStr].title : null].filter(Boolean).join(" & ");
-      
-      calendarGrid.innerHTML += `<div class="${classes.join(" ")}" data-date="${dateStr}" tabindex="0" title="${title}"><div>${day}</div><div class="pasaran">${pasaran}</div>${dotHTML}</div>`;
+      let dotsHTML = '<div class="dots-container">';
+      if (showHoliday) dotsHTML += '<span class="dot holiday"></span>';
+      if (showManual) dotsHTML += '<span class="dot manual"></span>';
+      dotsHTML += '</div>';
+
+      calendarGrid.innerHTML += `
+        <div class="${classes.join(" ")}" data-date="${dateStr}" tabindex="0" role="button">
+          <div class="day-number">${day}</div>
+          <div class="pasaran">${pasaran}</div>
+          ${dotsHTML}
+        </div>`;
     }
 
     document.querySelectorAll(".day").forEach(dayEl => {
       dayEl.addEventListener("click", () => {
         if (navigator.vibrate) navigator.vibrate(10);
         selectedDateStr = dayEl.getAttribute("data-date");
-        renderCalendar(); // Cukup render ulang tanpa animasi saat pilih tanggal
+        renderCalendar();
         updateHolidayDescription();
+      });
+      dayEl.addEventListener("keydown", (e) => {
+          if(e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              dayEl.click();
+          }
       });
     });
   }
@@ -619,31 +693,45 @@
     if (!selectedDateStr) return;
 
     const diffDays = daysDifference(selectedDateStr);
-    const diffText = diffDays === 0 ? "Hari ini" : (diffDays > 0 ? `Dalam ${diffDays} hari` : `${Math.abs(diffDays)} hari yang lalu`);
-    let contentHTML = '', isGlow = false;
+    let diffText;
+    if(diffDays === 0) diffText = "Hari ini";
+    else if(diffDays > 0) diffText = `Dalam ${diffDays} hari`;
+    else diffText = `${Math.abs(diffDays)} hari yang lalu`;
 
-    if (filterHoliday.checked && holidays[selectedDateStr]) {
-        contentHTML += `<div class="desc-holiday">${holidays[selectedDateStr]}</div>`;
-        isGlow = true;
-    }
-    if (filterManual.checked && manualEvents[selectedDateStr]) {
-        contentHTML += `<div class="desc-holiday" style="color: var(--accent-color);">${manualEvents[selectedDateStr].title}</div>`;
-        if (manualEvents[selectedDateStr].desc) {
-            contentHTML += `<div style="font-size:0.9em; opacity: 0.9;">${manualEvents[selectedDateStr].desc}</div>`;
-        }
-        isGlow = true;
-    }
+    let contentHTML = '';
+    const isHoliday = filterHoliday.checked && holidays[selectedDateStr];
+    const hasManualEvent = filterManual.checked && manualEvents[selectedDateStr];
 
-    holidayDesc.style.display = "block";
-    holidayDesc.classList.add("animate-desc");
-    holidayDesc.classList.toggle("holiday-glow", isGlow);
+    if (isHoliday) {
+        contentHTML += `<div>
+            <div class="desc-header">
+                <div class="desc-label national-holiday">Libur Nasional</div>
+            </div>
+            <div class="desc-title">${holidays[selectedDateStr]}</div>
+        </div>`;
+    }
+    if (hasManualEvent) {
+        contentHTML += `<div style="margin-top: ${isHoliday ? '16px' : '0'};">
+            <div class="desc-header">
+                <div class="desc-label manual-event">Acara Anda</div>
+                <button class="delete-btn" id="deleteEventBtn" title="Hapus Acara">🗑️</button>
+            </div>
+            <div class="desc-title">${manualEvents[selectedDateStr].title}</div>
+            ${manualEvents[selectedDateStr].desc ? `<div class="desc-custom">${manualEvents[selectedDateStr].desc.replace(/\n/g, '<br>')}</div>` : ''}
+        </div>`;
+    }
+    
+    holidayDesc.classList.remove('animate-desc');
+    void holidayDesc.offsetWidth;
     
     if (contentHTML) {
-      holidayDesc.innerHTML = `${contentHTML}<div class="desc-diff" style="margin-top:8px;">Tanggal: ${formatDateDMY(selectedDateStr)} (${diffText})</div>`;
+      holidayDesc.innerHTML = `${contentHTML}<div class="desc-date-info">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
+      holidayDesc.style.display = "block";
     } else {
-      holidayDesc.innerHTML = `<div class="desc-diff">Tanggal: ${formatDateDMY(selectedDateStr)} (${diffText})</div>`;
+      holidayDesc.innerHTML = `<div class="desc-date-info">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
+      holidayDesc.style.display = "block";
     }
-    setTimeout(() => holidayDesc.classList.remove('animate-desc'), 300);
+    holidayDesc.classList.add("animate-desc");
   }
 
   async function simpleRender() {
@@ -662,37 +750,35 @@
 
     calendarGrid.classList.add(outClass);
 
-    const handleAnimationEnd = async () => {
+    calendarGrid.addEventListener('animationend', async function handleAnimationEnd() {
       calendarGrid.removeEventListener('animationend', handleAnimationEnd);
 
-      if (direction === 'next') {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-      } else {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-      }
+      currentDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
       
       await simpleRender();
       
       calendarGrid.classList.remove(outClass);
       calendarGrid.classList.add(inClass);
       
-      const handleInAnimationEnd = () => {
+      calendarGrid.addEventListener('animationend', function handleInAnimationEnd() {
         calendarGrid.removeEventListener('animationend', handleInAnimationEnd);
         calendarGrid.classList.remove(inClass);
         isAnimating = false;
-      };
-      calendarGrid.addEventListener('animationend', handleInAnimationEnd);
-    };
-    calendarGrid.addEventListener('animationend', handleAnimationEnd);
+      });
+    }, { once: true });
   }
   
-  document.getElementById("prevMonth").onclick = () => { changeMonth('prev'); };
-  document.getElementById("nextMonth").onclick = () => { changeMonth('next'); };
+  document.getElementById("prevMonth").onclick = () => changeMonth('prev');
+  document.getElementById("nextMonth").onclick = () => changeMonth('next');
   document.getElementById("goYearBtn").onclick = () => { 
     const y = parseInt(document.getElementById("yearInput").value); 
-    if (y >= 1900 && y <= 2100) { currentDate.setFullYear(y, currentDate.getMonth(), 1); simpleRender(); } 
+    if (y >= 1900 && y <= 2100) { currentDate.setFullYear(y); simpleRender(); } 
   };
-  document.getElementById("resetBtn").onclick = () => { currentDate = new Date(); selectedDateStr = null; simpleRender(); };
+  document.getElementById("resetBtn").onclick = () => { 
+      currentDate = new Date();
+      selectedDateStr = currentDate.toISOString().slice(0,10);
+      simpleRender();
+  };
 
   let touchStartX=0;
   calendarContainer.addEventListener("touchstart", e => {
@@ -715,46 +801,56 @@
     menuPanel.setAttribute("aria-hidden", !isOpen);
   });
 
-  filterHoliday.addEventListener("change", () => { simpleRender(); });
-  filterManual.addEventListener("change", () => { simpleRender(); });
+  [filterHoliday, filterManual].forEach(el => el.addEventListener("change", () => { simpleRender(); }));
   
-  function getRGB(color) {
+  function getRGB(colorStr) {
       const d = document.createElement("div");
-      d.style.color = color;
+      d.style.color = colorStr;
       document.body.appendChild(d);
-      const rgb = getComputedStyle(d).color.match(/\d+/g).slice(0, 3).join(', ');
+      const rgb = getComputedStyle(d).color.match(/\d+/g);
       d.remove();
-      return rgb;
+      return rgb ? rgb.slice(0, 3).join(', ') : '144, 202, 249';
   }
 
-  function applyTheme(theme, themeName) {
-    currentTheme = theme;
+  function applyTheme(themeName) {
     document.body.className = '';
-    document.body.classList.add(theme);
-    const accentColor = getComputedStyle(document.body).getPropertyValue('--accent-color');
-    document.documentElement.style.setProperty('--accent-color-rgb', getRGB(accentColor.trim()));
-    currentThemeText.textContent = themeName;
-    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.toggle('selected', opt.dataset.theme === theme));
-    simpleRender(); // Render ulang untuk warna
+    document.body.classList.add(themeName);
+    const themeData = themes[themeName];
+    Object.keys(themeData.vars).forEach(key => {
+        document.documentElement.style.setProperty(key, themeData.vars[key]);
+    });
+    
+    const accentColor = themeData.vars['--accent-color'];
+    document.documentElement.style.setProperty('--accent-color-rgb', getRGB(accentColor));
+    
+    currentThemeText.textContent = themeData.name;
+    document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.theme === themeName);
+    });
+    simpleRender();
   }
   
+  const themes = {
+    'theme-blue': { name: 'Biru', vars: {'--accent-color':'#90caf9', '--holiday-color':'#ff8a80'} },
+    'theme-green': { name: 'Hijau', vars: {'--accent-color':'#81c784', '--holiday-color':'#ff8a65'} },
+    'theme-purple': { name: 'Ungu', vars: {'--accent-color':'#ce93d8', '--holiday-color':'#ffd54f'} }
+  };
   const themeStyles = document.createElement('style');
-  themeStyles.textContent = `
-    body.theme-blue { --accent-color: #90caf9; --holiday-color: #ff8a80; }
-    body.theme-green { --accent-color: #81c784; --holiday-color: #e57373; }
-    body.theme-purple { --accent-color: #ba68c8; --holiday-color: #f06292; }
-    .day.holiday-manual { border: 2px solid var(--accent-color); border-radius: 6px; }
-  `;
   document.head.appendChild(themeStyles);
 
-  addEventBtn.addEventListener("click", () => eventModal.classList.add("active"));
-  eventModal.querySelector(".close-btn").addEventListener("click", () => eventModal.classList.remove("active"));
+  addEventBtn.addEventListener("click", () => {
+      eventModal.classList.add("active");
+      eventForm.reset();
+      document.getElementById('eventDate').value = selectedDateStr || new Date().toISOString().slice(0,10);
+  });
+  [eventModal, themeModal].forEach(modal => {
+    modal.querySelector(".close-btn").addEventListener("click", () => modal.classList.remove("active"));
+  });
   themeMenuItem.addEventListener("click", () => themeModal.classList.add("active"));
-  themeModal.querySelector(".close-btn").addEventListener("click", () => themeModal.classList.remove("active"));
-
+  
   document.querySelectorAll('.theme-option').forEach(option => {
     option.addEventListener('click', () => {
-      applyTheme(option.dataset.theme, option.dataset.name);
+      applyTheme(option.dataset.theme);
       themeModal.classList.remove('active');
     });
   });
@@ -767,9 +863,20 @@
     if (!date || !title) { showToast("Tanggal dan Judul wajib diisi."); return; }
     manualEvents[date] = { title, desc };
     eventModal.classList.remove("active");
-    showToast(`Event "${title}" disimpan.`);
+    showToast(`Acara "${title}" disimpan.`);
     simpleRender();
     if (selectedDateStr === date) updateHolidayDescription();
+  });
+
+  holidayDesc.addEventListener('click', function(e) {
+      if (e.target.id === 'deleteEventBtn') {
+          const eventTitle = manualEvents[selectedDateStr]?.title || 'ini';
+          if (confirm(`Apakah Anda yakin ingin menghapus acara "${eventTitle}"?`)) {
+              delete manualEvents[selectedDateStr];
+              showToast("Acara telah dihapus.");
+              simpleRender();
+          }
+      }
   });
 
   function showToast(msg) {
@@ -779,7 +886,8 @@
   }
 
   (async function init() {
-    applyTheme('theme-blue', 'Biru');
+    applyTheme('theme-blue');
+    selectedDateStr = new Date().toISOString().slice(0,10);
     await simpleRender();
   })();
 </script>
