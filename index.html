@@ -14,7 +14,7 @@
   }
   body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
@@ -85,6 +85,9 @@
     margin: 12px auto;
     padding: 0 10px;
     touch-action: pan-y;
+    position: relative; /* Diperlukan untuk animasi */
+    overflow: hidden;   /* Menyembunyikan grid saat animasi */
+    min-height: 280px;  /* Mencegah lompatan layout saat animasi */
   }
   .calendar-grid {
     display: grid;
@@ -182,284 +185,228 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  #menuToggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--accent-color);
-    border: none;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 28px;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    z-index: 1001;
-    transition: background-color 0.3s;
-  }
-  #menuToggle.open {
-    background-color: #555;
-  }
-
-  #menuPanel {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    background: #222;
-    border-radius: 10px;
-    padding: 12px 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.7);
-    width: 220px;
-    max-width: 90vw;
-    color: white;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    z-index: 1000;
-  }
-  #menuPanel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
-  #menuPanel label,
-  #menuPanel select,
-  #menuPanel button {
-    display: block;
-    width: 100%;
-    margin-bottom: 12px;
-    font-size: 1rem;
-  }
-  #menuPanel input[type=checkbox] {
-    margin-right: 6px;
-    transform: scale(1.2);
-    vertical-align: middle;
-  }
-  #menuPanel select {
-    padding: 6px;
-    border-radius: 5px;
-    border: none;
-    background: #333;
-    color: white;
-    cursor: pointer;
-  }
-  #menuPanel button {
-    padding: 8px 0;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  #menuPanel button:hover {
-    background: #5aa3f7;
-  }
-
   /* Modal styles */
-  #eventModal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 1100;
-    justify-content: center;
-    align-items: center;
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 1100; justify-content: center; align-items: center;
   }
-  #eventModal.active {
-    display: flex;
+  .modal-overlay.active { display: flex; }
+  .modal-content {
+    background: #222; color: white; padding: 20px; border-radius: 10px;
+    width: 90%; max-width: 400px; box-sizing: border-box; position: relative;
+    animation: modal-pop 0.3s cubic-bezier(0.2, 1, 0.3, 1);
   }
-  #eventModal .modal-content {
-    background: #222;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 400px;
-    box-sizing: border-box;
-    position: relative;
+  @keyframes modal-pop {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
   }
-  #eventModal .close-btn {
-    position: absolute;
-    right: 16px;
-    top: 12px;
-    font-size: 28px;
-    cursor: pointer;
-    color: #ccc;
-    user-select: none;
+  .close-btn {
+    position: absolute; right: 16px; top: 12px; font-size: 28px;
+    cursor: pointer; color: #ccc; user-select: none;
   }
-  #eventModal label {
-    display: block;
-    margin-top: 12px;
+  #eventModal label { display: block; margin-top: 12px; }
+  #eventModal input[type=date], #eventModal input[type=text], #eventModal textarea {
+    width: 100%; padding: 8px; margin-top: 6px; border-radius: 6px;
+    border: none; background: #444; color: white; box-sizing: border-box; font-size: 1rem;
   }
-  #eventModal input[type=date],
-  #eventModal input[type=text],
-  #eventModal textarea {
-    width: 100%;
-    padding: 6px;
-    margin-top: 6px;
-    border-radius: 6px;
-    border: none;
-    background: #444;
-    color: white;
-    box-sizing: border-box;
-    font-size: 1rem;
-  }
-  #eventModal textarea {
-    resize: vertical;
-    min-height: 60px;
-  }
+  #eventModal textarea { resize: vertical; min-height: 60px; }
   #eventModal button[type=submit] {
-    margin-top: 16px;
-    background: var(--accent-color);
-    border: none;
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
+    margin-top: 16px; background: var(--accent-color); border: none;
+    color: white; padding: 10px; font-weight: bold; border-radius: 6px;
+    cursor: pointer; width: 100%;
   }
-  #eventModal button[type=submit]:hover {
-    background: #5aa3f7;
-  }
-
+  
   /* Toast style */
   #toast {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent-color);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    font-weight: bold;
-    z-index: 1200;
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--accent-color); color: white; padding: 12px 20px;
+    border-radius: 20px; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; z-index: 1200;
   }
-  #toast.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  #toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
 
   #menuToggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--accent-color);
-    border: none;
-    border-radius: 50%;
-    width: 54px;
-    height: 54px;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-    z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.28s cubic-bezier(.2,.9,.3,1), transform 0.18s ease;
+    position: fixed; bottom: 20px; right: 20px; background: var(--accent-color);
+    border: none; border-radius: 50%; width: 56px; height: 56px;
+    cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    z-index: 1001; display: flex; align-items: center; justify-content: center;
+    transition: background 0.3s cubic-bezier(.2,.9,.3,1), transform 0.3s cubic-bezier(.2,.9,.3,1);
     -webkit-tap-highlight-color: transparent;
   }
-  #menuToggle:hover { transform: scale(1.06); }
-
-  /* three-bar */
+  #menuToggle:hover { transform: scale(1.08) rotate(15deg); }
+  #menuToggle.open { background-color: #555; transform: scale(1.08) rotate(0deg); }
   #menuToggle .bar {
-    width: 26px;
-    height: 3px;
-    background: white;
-    border-radius: 2px;
-    position: relative;
-    transition: transform 0.28s ease, background 0.28s ease;
+    width: 26px; height: 3px; background: white; border-radius: 2px;
+    position: relative; transition: transform 0.28s ease, background 0.28s ease;
   }
-  #menuToggle .bar::before,
-  #menuToggle .bar::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    width: 26px;
-    height: 3px;
-    background: white;
-    border-radius: 2px;
+  #menuToggle .bar::before, #menuToggle .bar::after {
+    content: ""; position: absolute; left: 0; width: 26px; height: 3px;
+    background: white; border-radius: 2px;
     transition: transform 0.28s ease, top 0.28s ease, opacity 0.28s ease;
   }
   #menuToggle .bar::before { top: -8px; }
   #menuToggle .bar::after { top: 8px; }
-
-  /* open state -> X */
   #menuToggle.open .bar { background: transparent; }
-  #menuToggle.open .bar::before {
-    transform: rotate(45deg);
-    top: 0;
-  }
-  #menuToggle.open .bar::after {
-    transform: rotate(-45deg);
-    top: 0;
-  }
+  #menuToggle.open .bar::before { transform: rotate(45deg); top: 0; }
+  #menuToggle.open .bar::after { transform: rotate(-45deg); top: 0; }
 
-  /* Panel menu with slide-up + blur + subtle scale */
   #menuPanel {
-    position: fixed;
-    bottom: 84px;
-    right: 20px;
-    background: rgba(18,18,18,0.72);
-    backdrop-filter: blur(10px) saturate(120%);
-    border-radius: 14px;
-    padding: 14px 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    width: 260px;
-    max-width: 92vw;
-    color: white;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(22px) scale(0.985);
-    transition: opacity 260ms cubic-bezier(.2,.9,.3,1), transform 260ms cubic-bezier(.2,.9,.3,1);
+    position: fixed; bottom: 88px; right: 20px;
+    background: rgba(38, 38, 38, 0.75);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px; padding: 12px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    width: 280px; max-width: 90vw;
+    opacity: 0; pointer-events: none;
+    transform: translateY(20px) scale(0.98);
+    transition: opacity 300ms cubic-bezier(0.2, 1, 0.3, 1), transform 300ms cubic-bezier(0.2, 1, 0.3, 1);
     z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
   }
   #menuPanel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
+    opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
   }
-  #menuPanel label,
-  #menuPanel select,
-  #menuPanel button {
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+  }
+
+  .menu-item.clickable:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+  }
+  .menu-item svg {
+    width: 22px; height: 22px; margin-right: 16px;
+    flex-shrink: 0; fill: #e0e0e0;
+  }
+  .menu-item > span {
+    flex-grow: 1; color: #f0f0f0; font-weight: 500;
+  }
+
+  .toggle-switch {
+    position: relative; display: inline-block;
+    width: 44px; height: 24px; flex-shrink: 0;
+    cursor: pointer;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.3s; border-radius: 24px;
+  }
+  .slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px;
+    left: 3px; bottom: 3px; background-color: white;
+    transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); border-radius: 50%;
+  }
+  input:checked + .slider { background-color: var(--accent-color); }
+  input:checked + .slider:before { transform: translateX(20px); }
+  
+  #currentThemeText {
+    color: var(--accent-color);
+    font-weight: bold;
+    margin-right: 8px;
+  }
+  .chevron-icon {
+    fill: #888; width: 18px; height: 18px;
+  }
+
+  #addEventBtn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; width: 100%; padding: 12px 0; margin-top: 8px;
+    background: var(--accent-color); color: white; border: none;
+    border-radius: 12px; font-weight: bold; font-size: 1rem;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #addEventBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(var(--accent-color-rgb, 33, 150, 243), 0.3);
+  }
+  #addEventBtn svg { width: 20px; height: 20px; fill: white; }
+
+  /* MODAL PEMILIH TEMA (IMPROVED) */
+  .theme-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  .theme-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid #555;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+  }
+  .theme-option:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
+  }
+  .theme-option.selected {
+    border-color: var(--accent-color);
+    background-color: rgba(144, 202, 249, 0.1);
+  }
+  .theme-option .checkmark-icon {
+    display: none;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  .theme-option.selected .checkmark-icon {
     display: block;
-    width: 100%;
-    margin-bottom: 12px;
-    font-size: 1rem;
+    animation: pop-in 0.3s cubic-bezier(0.2, 1, 0.3, 1);
   }
-  #menuPanel input[type=checkbox] { margin-right: 8px; transform: scale(1.1); vertical-align: middle; }
-  #menuPanel select {
-    padding: 8px;
-    border-radius: 8px;
-    border: none;
-    background: rgba(255,255,255,0.03);
-    color: white;
-    cursor: pointer;
-    outline: none;
-    -webkit-appearance: none;
+  @keyframes pop-in {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
-  #menuPanel button {
-    padding: 10px 0;
-    background: linear-gradient(180deg, var(--accent-color), rgba(90,163,247,0.9));
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(33,150,243,0.12), inset 0 -2px 6px rgba(0,0,0,0.12);
+  .color-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
-  #menuPanel button:hover { transform: translateY(-1px); }
-  /* small responsive tweak */
+  #swatch-blue { background-color: #90caf9; }
+  #swatch-green { background-color: #81c784; }
+  #swatch-purple { background-color: #ba68c8; }
+
+  /* ANIMASI GESER KALENDER */
+  @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
+  @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  @keyframes slide-in-from-left { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .slide-out-left { animation: slide-out-left 0.25s ease-out forwards; }
+  .slide-in-from-right { animation: slide-in-from-right 0.25s ease-out forwards; }
+  .slide-out-right { animation: slide-out-right 0.25s ease-out forwards; }
+  .slide-in-from-left { animation: slide-in-from-left 0.25s ease-out forwards; }
+  
   @media (max-width:420px) {
-    #menuToggle { right: 14px; bottom: 18px; width:50px; height:50px; }
-    #menuPanel { right: 12px; width: 88vw; bottom: 78px; }
+    #menuToggle { right: 14px; bottom: 18px; width:52px; height:52px; }
+    #menuPanel { right: 12px; width: 88vw; bottom: 80px; }
   }
+
 </style>
 </head>
 <body class="theme-blue">
@@ -483,23 +430,40 @@
 
 <div id="holidayDescription" role="region" aria-live="polite" aria-atomic="true" style="display:none;"></div>
 
-<!-- Tombol hamburger: diganti jadi tiga-bar animated icon (tetap id dan atribut sama agar JS tetap berfungsi) -->
 <button id="menuToggle" aria-label="Toggle Menu" aria-expanded="false">
   <div class="bar" aria-hidden="true"></div>
 </button>
+
 <div id="menuPanel" aria-hidden="true">
-  <label><input type="checkbox" id="filterHoliday" checked /> Tampilkan Libur Nasional</label>
-  <label><input type="checkbox" id="filterManual" checked /> Tampilkan Event Manual</label>
-  <label for="themeSelect">Tema Warna:</label>
-  <select id="themeSelect" aria-label="Pilih Tema Warna">
-    <option value="theme-blue" selected>Biru</option>
-    <option value="theme-green">Hijau</option>
-    <option value="theme-purple">Ungu</option>
-  </select>
-  <button id="addEventBtn">+ Tambah Event Manual</button>
+  <div class="menu-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V8H4V11H20M20,13H4V16H20V13M18.5,4H17.5V2H15.5V4H8.5V2H6.5V4H5.5A1.5,1.5 0 0,0 4,5.5V18.5A1.5,1.5 0 0,0 5.5,20H18.5A1.5,1.5 0 0,0 20,18.5V5.5A1.5,1.5 0 0,0 18.5,4Z" /></svg>
+    <span>Libur Nasional</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="filterHoliday" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="menu-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
+    <span>Event Manual</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="filterManual" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div id="themeMenuItem" class="menu-item clickable">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3Z" /></svg>
+    <span>Tema Warna</span>
+    <span id="currentThemeText">Biru</span>
+    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+  </div>
+  <button id="addEventBtn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+    <span>Tambah Event</span>
+  </button>
 </div>
 
-<div id="eventModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div id="eventModal" class="modal-overlay">
   <div class="modal-content">
     <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
     <h2 id="modalTitle">Tambah Event Manual</h2>
@@ -515,6 +479,30 @@
   </div>
 </div>
 
+<div id="themeModal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
+    <h2>Pilih Tema Warna</h2>
+    <div class="theme-options-grid">
+      <div class="theme-option" data-theme="theme-blue" data-name="Biru">
+        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+        <div class="color-swatch" id="swatch-blue"></div>
+        <span>Biru</span>
+      </div>
+      <div class="theme-option" data-theme="theme-green" data-name="Hijau">
+        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+        <div class="color-swatch" id="swatch-green"></div>
+        <span>Hijau</span>
+      </div>
+      <div class="theme-option" data-theme="theme-purple" data-name="Ungu">
+        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+        <div class="color-swatch" id="swatch-purple"></div>
+        <span>Ungu</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -526,19 +514,26 @@
   let holidays = {};
   let manualEvents = {};
   let selectedDateStr = null;
+  let currentTheme = 'theme-blue';
+  let isAnimating = false; // Flag untuk mencegah animasi ganda
 
+  // Inisialisasi Elemen DOM
+  const calendarContainer = document.querySelector(".calendar");
   const holidayDesc = document.getElementById("holidayDescription");
   const calendarGrid = document.getElementById("calendarDays");
   const filterHoliday = document.getElementById("filterHoliday");
   const filterManual = document.getElementById("filterManual");
-  const themeSelect = document.getElementById("themeSelect");
   const menuToggle = document.getElementById("menuToggle");
   const menuPanel = document.getElementById("menuPanel");
   const addEventBtn = document.getElementById("addEventBtn");
   const eventModal = document.getElementById("eventModal");
   const eventForm = document.getElementById("eventForm");
   const toast = document.getElementById("toast");
+  const themeModal = document.getElementById("themeModal");
+  const themeMenuItem = document.getElementById("themeMenuItem");
+  const currentThemeText = document.getElementById("currentThemeText");
 
+  // Fungsi-fungsi Utama
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
     const diffDays = Math.floor((date - refDate) / (1000 * 60 * 60 * 24));
@@ -554,28 +549,22 @@
       const data = await res.json();
       holidays = {};
       if (data.items) {
-        data.items.forEach(event => {
-          holidays[event.start.date] = event.summary;
-        });
+        data.items.forEach(event => { holidays[event.start.date] = event.summary; });
       }
       holidays._year = year;
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error("Gagal mengambil data libur:", e); }
   }
 
   function formatDateDMY(dateStr) {
+    if (!dateStr) return '';
     const parts = dateStr.split("-");
-    return parts[2] + "/" + parts[1] + "/" + parts[0];
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
   function daysDifference(dateStr) {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const targetDate = new Date(dateStr);
-    targetDate.setHours(0,0,0,0);
-    const diff = Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
-    return diff;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const targetDate = new Date(dateStr); targetDate.setHours(0,0,0,0);
+    return Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
   }
 
   function renderCalendar() {
@@ -586,224 +575,212 @@
     document.getElementById("monthYear").textContent = currentDate.toLocaleString("id-ID", { month: "long", year: "numeric" });
     document.getElementById("yearInput").value = year;
 
-    dayNames.forEach(d => {
-      calendarGrid.innerHTML += `<div class="header-day">${d}</div>`;
-    });
-
+    dayNames.forEach(d => { calendarGrid.innerHTML += `<div class="header-day">${d}</div>`; });
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let i = 0; i < firstDay; i++) {
-      calendarGrid.innerHTML += `<div></div>`;
-    }
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
+    for (let i = 0; i < firstDay; i++) { calendarGrid.innerHTML += `<div></div>`; }
+    const today = new Date(); today.setHours(0,0,0,0);
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
       const dateObj = new Date(year, month, day);
-
       const classes = ["day"];
       const isHoliday = holidays[dateStr] !== undefined;
       const hasManualEvent = manualEvents[dateStr] !== undefined;
       const showHoliday = filterHoliday.checked && isHoliday;
       const showManual = filterManual.checked && hasManualEvent;
 
-      if (dateObj.getDay() === 0 && !showHoliday && !showManual) classes.push("holiday");
+      if (dateObj.getDay() === 0 && !showHoliday) classes.push("holiday");
       if (showHoliday) classes.push("holiday");
-      if (showManual) classes.push("day-manual");
+      if (showManual) classes.push("holiday-manual");
       if (+dateObj === +today) classes.push("today");
       if (selectedDateStr === dateStr) classes.push("selected");
-
+      
       const pasaran = getPasaranJawa(dateObj);
-      let dotHTML = "";
-      if (selectedDateStr === dateStr) {
-        dotHTML = `<div class="selected-dot"></div>`;
-      }
-
-      let title = "";
-      if (showHoliday) title = holidays[dateStr];
-      else if (showManual) title = manualEvents[dateStr].title;
-
-      calendarGrid.innerHTML += `
-        <div class="${classes.join(" ")}" data-date="${dateStr}" tabindex="0" title="${title}">
-          <div>${day}</div><div class="pasaran">${pasaran}</div>${dotHTML}
-        </div>`;
+      let dotHTML = (selectedDateStr === dateStr) ? `<div class="selected-dot"></div>` : "";
+      let title = [showHoliday ? holidays[dateStr] : null, showManual ? manualEvents[dateStr].title : null].filter(Boolean).join(" & ");
+      
+      calendarGrid.innerHTML += `<div class="${classes.join(" ")}" data-date="${dateStr}" tabindex="0" title="${title}"><div>${day}</div><div class="pasaran">${pasaran}</div>${dotHTML}</div>`;
     }
 
     document.querySelectorAll(".day").forEach(dayEl => {
       dayEl.addEventListener("click", () => {
         if (navigator.vibrate) navigator.vibrate(10);
         selectedDateStr = dayEl.getAttribute("data-date");
-        renderCalendar();
+        renderCalendar(); // Cukup render ulang tanpa animasi saat pilih tanggal
         updateHolidayDescription();
       });
     });
   }
-
+  
   function updateHolidayDescription() {
-    if (!selectedDateStr) {
-      holidayDesc.style.display = "none";
-      holidayDesc.textContent = "";
-      return;
-    }
+    holidayDesc.style.display = "none";
+    holidayDesc.innerHTML = "";
+    if (!selectedDateStr) return;
 
     const diffDays = daysDifference(selectedDateStr);
     const diffText = diffDays === 0 ? "Hari ini" : (diffDays > 0 ? `Dalam ${diffDays} hari` : `${Math.abs(diffDays)} hari yang lalu`);
+    let contentHTML = '', isGlow = false;
 
     if (filterHoliday.checked && holidays[selectedDateStr]) {
-      // Tanggal merah: tampilkan deskripsi + selisih hari
-      holidayDesc.style.display = "block";
-      holidayDesc.classList.add("holiday-glow", "animate-desc");
-      holidayDesc.innerHTML = `
-        <div class="desc-holiday">${holidays[selectedDateStr]}</div>
-        <div class="desc-diff">Tanggal: ${formatDateDMY(selectedDateStr)}</div>
-        <div class="desc-diff">(${diffText})</div>
-      `;
-    } else {
-      // Bukan tanggal merah: hanya tampilkan selisih hari
-      holidayDesc.style.display = "block";
-      holidayDesc.classList.remove("holiday-glow");
-      holidayDesc.classList.add("animate-desc");
-      holidayDesc.innerHTML = `
-        <div class="desc-diff">Tanggal: ${formatDateDMY(selectedDateStr)}</div>
-        <div class="desc-diff">(${diffText})</div>
-      `;
+        contentHTML += `<div class="desc-holiday">${holidays[selectedDateStr]}</div>`;
+        isGlow = true;
     }
+    if (filterManual.checked && manualEvents[selectedDateStr]) {
+        contentHTML += `<div class="desc-holiday" style="color: var(--accent-color);">${manualEvents[selectedDateStr].title}</div>`;
+        if (manualEvents[selectedDateStr].desc) {
+            contentHTML += `<div style="font-size:0.9em; opacity: 0.9;">${manualEvents[selectedDateStr].desc}</div>`;
+        }
+        isGlow = true;
+    }
+
+    holidayDesc.style.display = "block";
+    holidayDesc.classList.add("animate-desc");
+    holidayDesc.classList.toggle("holiday-glow", isGlow);
+    
+    if (contentHTML) {
+      holidayDesc.innerHTML = `${contentHTML}<div class="desc-diff" style="margin-top:8px;">Tanggal: ${formatDateDMY(selectedDateStr)} (${diffText})</div>`;
+    } else {
+      holidayDesc.innerHTML = `<div class="desc-diff">Tanggal: ${formatDateDMY(selectedDateStr)} (${diffText})</div>`;
+    }
+    setTimeout(() => holidayDesc.classList.remove('animate-desc'), 300);
   }
 
-  async function checkAndRender() {
+  async function simpleRender() {
     const year = currentDate.getFullYear();
-    if (holidays._year !== year) {
-      await fetchHolidays(year);
-    }
+    if (holidays._year !== year) await fetchHolidays(year);
     renderCalendar();
     updateHolidayDescription();
   }
+  
+  async function changeMonth(direction) {
+    if (isAnimating) return;
+    isAnimating = true;
 
-  document.getElementById("prevMonth").onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); checkAndRender(); };
-  document.getElementById("nextMonth").onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); checkAndRender(); };
+    const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
+    const inClass = direction === 'next' ? 'slide-in-from-right' : 'slide-in-from-left';
+
+    calendarGrid.classList.add(outClass);
+
+    const handleAnimationEnd = async () => {
+      calendarGrid.removeEventListener('animationend', handleAnimationEnd);
+
+      if (direction === 'next') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      } else {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+      }
+      
+      await simpleRender();
+      
+      calendarGrid.classList.remove(outClass);
+      calendarGrid.classList.add(inClass);
+      
+      const handleInAnimationEnd = () => {
+        calendarGrid.removeEventListener('animationend', handleInAnimationEnd);
+        calendarGrid.classList.remove(inClass);
+        isAnimating = false;
+      };
+      calendarGrid.addEventListener('animationend', handleInAnimationEnd);
+    };
+    calendarGrid.addEventListener('animationend', handleAnimationEnd);
+  }
+  
+  document.getElementById("prevMonth").onclick = () => { changeMonth('prev'); };
+  document.getElementById("nextMonth").onclick = () => { changeMonth('next'); };
   document.getElementById("goYearBtn").onclick = () => { 
     const y = parseInt(document.getElementById("yearInput").value); 
-    if (y >= 1900 && y <= 2100) { 
-      currentDate.setFullYear(y); 
-      currentDate.setMonth(0); 
-      checkAndRender(); 
-    } 
+    if (y >= 1900 && y <= 2100) { currentDate.setFullYear(y, currentDate.getMonth(), 1); simpleRender(); } 
   };
-  document.getElementById("resetBtn").onclick = () => { currentDate = new Date(); checkAndRender(); };
+  document.getElementById("resetBtn").onclick = () => { currentDate = new Date(); selectedDateStr = null; simpleRender(); };
 
-  // Swipe gesture for mobile
-  let touchStartX=0,touchEndX=0;
-  calendarGrid.addEventListener("touchstart", e => touchStartX = e.changedTouches[0].screenX);
-  calendarGrid.addEventListener("touchend", e => { 
-    touchEndX = e.changedTouches[0].screenX; 
-    if (touchEndX - touchStartX > 40) document.getElementById("prevMonth").click(); 
-    if (touchEndX - touchStartX < -40) document.getElementById("nextMonth").click(); 
+  let touchStartX=0;
+  calendarContainer.addEventListener("touchstart", e => {
+      if(isAnimating) return;
+      touchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+
+  calendarContainer.addEventListener("touchend", e => { 
+    if(isAnimating) return;
+    const touchEndX = e.changedTouches[0].screenX;
+    const deltaX = touchEndX - touchStartX;
+    if (deltaX > 50) { changeMonth('prev'); } 
+    else if (deltaX < -50) { changeMonth('next'); }
   });
-
-  // Hamburger menu toggle
+  
   menuToggle.addEventListener("click", () => {
-    const open = menuPanel.classList.toggle("open");
-    menuToggle.classList.toggle("open", open);
-    menuToggle.setAttribute("aria-expanded", open);
-    menuPanel.setAttribute("aria-hidden", !open);
+    const isOpen = menuPanel.classList.toggle("open");
+    menuToggle.classList.toggle("open", isOpen);
+    menuToggle.setAttribute("aria-expanded", isOpen);
+    menuPanel.setAttribute("aria-hidden", !isOpen);
   });
 
-  // Filters change
-  filterHoliday.addEventListener("change", () => {
-    renderCalendar();
-    updateHolidayDescription();
-  });
-  filterManual.addEventListener("change", () => {
-    renderCalendar();
-    updateHolidayDescription();
-  });
-
-  // Theme change
-  function applyTheme(theme) {
-    document.body.classList.remove("theme-blue", "theme-green", "theme-purple");
-    document.body.classList.add(theme);
+  filterHoliday.addEventListener("change", () => { simpleRender(); });
+  filterManual.addEventListener("change", () => { simpleRender(); });
+  
+  function getRGB(color) {
+      const d = document.createElement("div");
+      d.style.color = color;
+      document.body.appendChild(d);
+      const rgb = getComputedStyle(d).color.match(/\d+/g).slice(0, 3).join(', ');
+      d.remove();
+      return rgb;
   }
-  themeSelect.addEventListener("change", e => {
-    applyTheme(e.target.value);
-  });
 
-  // apply theme CSS variables
-  const style = document.createElement('style');
-  style.textContent = `
-    body.theme-blue {
-      --accent-color: #90caf9;
-      --holiday-color: #ff8a80;
-      --neon-green: #39ff14;
-      background-color: #121212;
-      color: #fff;
-    }
-    body.theme-green {
-      --accent-color: #80c99b;
-      --holiday-color: #d46a6a;
-      --neon-green: #00ff44;
-      background-color: #121212;
-      color: #fff;
-    }
-    body.theme-purple {
-      --accent-color: #b07de8;
-      --holiday-color: #e87db0;
-      --neon-green: #bbff00;
-      background-color: #121212;
-      color: #fff;
-    }
+  function applyTheme(theme, themeName) {
+    currentTheme = theme;
+    document.body.className = '';
+    document.body.classList.add(theme);
+    const accentColor = getComputedStyle(document.body).getPropertyValue('--accent-color');
+    document.documentElement.style.setProperty('--accent-color-rgb', getRGB(accentColor.trim()));
+    currentThemeText.textContent = themeName;
+    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.toggle('selected', opt.dataset.theme === theme));
+    simpleRender(); // Render ulang untuk warna
+  }
+  
+  const themeStyles = document.createElement('style');
+  themeStyles.textContent = `
+    body.theme-blue { --accent-color: #90caf9; --holiday-color: #ff8a80; }
+    body.theme-green { --accent-color: #81c784; --holiday-color: #e57373; }
+    body.theme-purple { --accent-color: #ba68c8; --holiday-color: #f06292; }
+    .day.holiday-manual { border: 2px solid var(--accent-color); border-radius: 6px; }
   `;
-  document.head.appendChild(style);
-  applyTheme(themeSelect.value);
+  document.head.appendChild(themeStyles);
 
-  // Add manual event modal open
-  addEventBtn.addEventListener("click", () => {
-    eventModal.classList.add("active");
-    eventForm.eventDate.value = selectedDateStr || new Date().toISOString().slice(0,10);
-    eventForm.eventTitle.value = "";
-    eventForm.eventDesc.value = "";
+  addEventBtn.addEventListener("click", () => eventModal.classList.add("active"));
+  eventModal.querySelector(".close-btn").addEventListener("click", () => eventModal.classList.remove("active"));
+  themeMenuItem.addEventListener("click", () => themeModal.classList.add("active"));
+  themeModal.querySelector(".close-btn").addEventListener("click", () => themeModal.classList.remove("active"));
+
+  document.querySelectorAll('.theme-option').forEach(option => {
+    option.addEventListener('click', () => {
+      applyTheme(option.dataset.theme, option.dataset.name);
+      themeModal.classList.remove('active');
+    });
   });
 
-  // Close modal
-  eventModal.querySelector(".close-btn").addEventListener("click", () => {
-    eventModal.classList.remove("active");
-  });
-  eventModal.addEventListener("click", e => {
-    if (e.target === eventModal) eventModal.classList.remove("active");
-  });
-
-  // Save manual event
   eventForm.addEventListener("submit", e => {
     e.preventDefault();
     const date = eventForm.eventDate.value;
     const title = eventForm.eventTitle.value.trim();
     const desc = eventForm.eventDesc.value.trim();
-
-    if (!date || !title) {
-      showToast("Tanggal dan Judul wajib diisi.");
-      return;
-    }
+    if (!date || !title) { showToast("Tanggal dan Judul wajib diisi."); return; }
     manualEvents[date] = { title, desc };
     eventModal.classList.remove("active");
-    showToast(`Event "${title}" disimpan pada ${formatDateDMY(date)}.`);
-
-    renderCalendar();
-    updateHolidayDescription();
+    showToast(`Event "${title}" disimpan.`);
+    simpleRender();
+    if (selectedDateStr === date) updateHolidayDescription();
   });
 
-  // Toast helper
   function showToast(msg) {
     toast.textContent = msg;
     toast.classList.add("show");
-    setTimeout(() => {
-      toast.classList.remove("show");
-    }, 2500);
+    setTimeout(() => toast.classList.remove("show"), 2500);
   }
 
   (async function init() {
-    await checkAndRender();
+    applyTheme('theme-blue', 'Biru');
+    await simpleRender();
   })();
 </script>
 
