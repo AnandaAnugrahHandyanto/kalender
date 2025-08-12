@@ -11,6 +11,9 @@
     --text-color: #f0f0f0;
     --text-color-muted: #9e9e9e;
     --border-color: rgba(255, 255, 255, 0.1);
+    --danger-color: #ff6b6b;
+    --danger-bg-color: rgba(255, 107, 107, 0.1);
+    --icon-size: 18px;
   }
   body {
     margin: 0;
@@ -130,7 +133,7 @@
     transition: background-color 0.2s ease, color 0.2s ease;
     position: relative;
     outline: none;
-    padding: 4px 4px 12px 4px;
+    padding: 4px 4px 12px 4px; /* Adjusted padding for dots */
   }
   .calendar-grid > div.day:focus-visible {
     box-shadow: 0 0 0 2px var(--accent-color);
@@ -169,7 +172,7 @@
   .pasaran {
     display: block;
     font-size: 0.7rem;
-    line-height: 1;
+    line-height: 1; /* Tighter line height */
     color: var(--text-color-muted);
     transition: color 0.2s ease;
   }
@@ -178,7 +181,7 @@
   }
   .dots-container {
     position: absolute;
-    bottom: 3px;
+    bottom: 3px; /* Positioned in the new padding area */
     left: 0;
     right: 0;
     display: flex;
@@ -232,7 +235,6 @@
       background: transparent;
       border: none;
       color: var(--text-color-muted);
-      font-size: 1.2rem;
       cursor: pointer;
       padding: 4px;
       border-radius: 50%;
@@ -240,10 +242,23 @@
       align-items: center;
       justify-content: center;
       transition: color 0.2s, background-color 0.2s;
+      width: calc(var(--icon-size) + 8px);
+      height: calc(var(--icon-size) + 8px);
   }
   .delete-btn:hover {
-      color: #ff8a80;
-      background-color: rgba(255, 138, 128, 0.1);
+      color: var(--danger-color);
+      background-color: var(--danger-bg-color);
+  }
+  .delete-icon {
+      width: var(--icon-size);
+      height: var(--icon-size);
+      transition: fill 0.2s;
+  }
+  .delete-btn .delete-icon {
+      fill: var(--text-color-muted);
+  }
+  .delete-btn:hover .delete-icon {
+      fill: var(--danger-color);
   }
   #holidayDescription .desc-title {
     font-size: 1.25rem;
@@ -295,7 +310,7 @@
   }
   .close-btn:hover { color: white; }
   
-  #eventModal label, #themeModal h2 { margin-bottom: 16px; }
+  #eventModal label, #themeModal h2, #eventListModal h2, #confirmModal h2 { margin-bottom: 16px; }
   #eventModal label { display: block; margin-top: 16px; font-size: 0.9rem; color: var(--text-color-muted); }
   #eventModal input[type=date], #eventModal input[type=text], #eventModal textarea {
     width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px;
@@ -451,6 +466,79 @@
   #swatch-green { background: linear-gradient(45deg, #81c784, #66bb6a); }
   #swatch-purple { background: linear-gradient(45deg, #ba68c8, #ab47bc); }
 
+  /* Event List Modal Styles */
+  #eventListContainer {
+      max-height: 60vh;
+      overflow-y: auto;
+      margin-top: 16px;
+      padding-right: 8px; /* For scrollbar */
+  }
+  .event-list-item {
+      background-color: rgba(255,255,255,0.05);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+  .event-list-item-info {
+      flex-grow: 1;
+  }
+  .event-list-item-title {
+      font-weight: bold;
+      color: var(--accent-color);
+  }
+  .event-list-item-date {
+      font-size: 0.9rem;
+      color: var(--text-color-muted);
+      margin-bottom: 4px;
+  }
+  .event-list-item-desc {
+      font-size: 0.85rem;
+      opacity: 0.8;
+  }
+  .empty-list-message {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-color-muted);
+  }
+
+  /* Custom Confirm Modal Styles */
+  #confirmModal .modal-content {
+      max-width: 340px;
+  }
+  #confirmMessage {
+      margin: 0;
+      margin-bottom: 24px;
+      font-size: 1.1rem;
+      line-height: 1.5;
+      text-align: center;
+  }
+  .confirm-actions {
+      display: flex;
+      gap: 12px;
+  }
+  .confirm-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+  }
+  .confirm-btn:hover { opacity: 0.85; }
+  #confirmBtnYes {
+      background-color: var(--danger-color);
+      color: white;
+  }
+  #confirmBtnNo {
+      background-color: #555;
+      color: white;
+  }
+
   @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
   @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
@@ -496,7 +584,7 @@
 
 <div id="menuPanel" aria-hidden="true">
   <div class="menu-item">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V8H4V11H20M20,13H4V16H20V13M18.5,4H17.5V2H15.5V4H8.5V2H6.5V4H5.5A1.5,1.5 0 0,0 4,5.5V18.5A1.5,1.5 0 0,0 5.5,20H18.5A1.5,1.5 0 0,0 20,18.5V5.5A1.5,1.5 0 0,0 18.5,4Z" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V8H4V11H20M20,13H4V16H20V13M18.5,4H17.5V2H15.5V4H8.5V2H6.5V4H5.5A1.5,1.5 0 0,0 4,5.5V18.5A1.5,1.5 0 0,0 5.5,20H18.5A1.5,1.5 0 0,0 20,18.5V5.5A1.5,1.5 0 0,0 18.5,4Z" /></svg>
     <span>Libur Nasional</span>
     <label class="toggle-switch">
       <input type="checkbox" id="filterHoliday" checked />
@@ -504,7 +592,7 @@
     </label>
   </div>
   <div class="menu-item">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
     <span>Acara Anda</span>
     <label class="toggle-switch">
       <input type="checkbox" id="filterManual" checked />
@@ -512,13 +600,17 @@
     </label>
   </div>
   <div id="themeMenuItem" class="menu-item clickable">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3Z" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3Z" /></svg>
     <span>Tema Warna</span>
     <span id="currentThemeText">Biru</span>
-    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+  </div>
+  <div id="viewEventsBtn" class="menu-item clickable">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M9,5V9H21V5M9,19H21V15H9M9,14H21V10H9M4,9H8V5H4M4,19H8V15H4M4,14H8V10H4V14Z" /></svg>
+    <span>Daftar Acara</span>
   </div>
   <button id="addEventBtn">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
     <span>Tambah Acara</span>
   </button>
 </div>
@@ -563,6 +655,24 @@
   </div>
 </div>
 
+<div id="eventListModal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
+      <h2>Daftar Acara Anda</h2>
+      <div id="eventListContainer"></div>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-content">
+        <p id="confirmMessage"></p>
+        <div class="confirm-actions">
+            <button id="confirmBtnNo" class="confirm-btn">Batal</button>
+            <button id="confirmBtnYes" class="confirm-btn">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -591,6 +701,11 @@
   const themeModal = document.getElementById("themeModal");
   const themeMenuItem = document.getElementById("themeMenuItem");
   const currentThemeText = document.getElementById("currentThemeText");
+  const viewEventsBtn = document.getElementById("viewEventsBtn");
+  const eventListModal = document.getElementById("eventListModal");
+  const eventListContainer = document.getElementById("eventListContainer");
+  const confirmModal = document.getElementById("confirmModal");
+  const addIconSVG = `<svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
 
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
@@ -620,6 +735,7 @@
   function formatDateDMY(dateStr) {
     if (!dateStr) return '';
     const date = new Date(dateStr);
+    date.setUTCHours(12); // Prevent timezone issues
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
@@ -714,7 +830,9 @@
         contentHTML += `<div style="margin-top: ${isHoliday ? '16px' : '0'};">
             <div class="desc-header">
                 <div class="desc-label manual-event">Acara Anda</div>
-                <button class="delete-btn" id="deleteEventBtn" title="Hapus Acara">🗑️</button>
+                <button class="delete-btn" data-date="${selectedDateStr}" title="Hapus Acara">
+                  ${addIconSVG}
+                </button>
             </div>
             <div class="desc-title">${manualEvents[selectedDateStr].title}</div>
             ${manualEvents[selectedDateStr].desc ? `<div class="desc-custom">${manualEvents[selectedDateStr].desc.replace(/\n/g, '<br>')}</div>` : ''}
@@ -752,22 +870,46 @@
 
     calendarGrid.addEventListener('animationend', async function handleAnimationEnd() {
       calendarGrid.removeEventListener('animationend', handleAnimationEnd);
-
       currentDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
-      
       await simpleRender();
-      
       calendarGrid.classList.remove(outClass);
       calendarGrid.classList.add(inClass);
-      
       calendarGrid.addEventListener('animationend', function handleInAnimationEnd() {
         calendarGrid.removeEventListener('animationend', handleInAnimationEnd);
         calendarGrid.classList.remove(inClass);
         isAnimating = false;
-      });
+      }, { once: true });
     }, { once: true });
   }
+
+  function renderEventList() {
+      eventListContainer.innerHTML = '';
+      const sortedDates = Object.keys(manualEvents).sort();
+
+      if (sortedDates.length === 0) {
+          eventListContainer.innerHTML = `<div class="empty-list-message">Belum ada acara yang ditambahkan.</div>`;
+          return;
+      }
+      
+      sortedDates.forEach(date => {
+          const event = manualEvents[date];
+          const item = document.createElement('div');
+          item.className = 'event-list-item';
+          item.innerHTML = `
+              <div class="event-list-item-info">
+                  <div class="event-list-item-date">${formatDateDMY(date)}</div>
+                  <div class="event-list-item-title">${event.title}</div>
+                  ${event.desc ? `<div class="event-list-item-desc">${event.desc.substring(0, 50)}${event.desc.length > 50 ? '...' : ''}</div>` : ''}
+              </div>
+              <button class="delete-btn" data-date="${date}" title="Hapus Acara">
+                ${addIconSVG}
+              </button>
+          `;
+          eventListContainer.appendChild(item);
+      });
+  }
   
+  // --- Event Listeners ---
   document.getElementById("prevMonth").onclick = () => changeMonth('prev');
   document.getElementById("nextMonth").onclick = () => changeMonth('next');
   document.getElementById("goYearBtn").onclick = () => { 
@@ -819,10 +961,8 @@
     Object.keys(themeData.vars).forEach(key => {
         document.documentElement.style.setProperty(key, themeData.vars[key]);
     });
-    
     const accentColor = themeData.vars['--accent-color'];
     document.documentElement.style.setProperty('--accent-color-rgb', getRGB(accentColor));
-    
     currentThemeText.textContent = themeData.name;
     document.querySelectorAll('.theme-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.theme === themeName);
@@ -835,18 +975,23 @@
     'theme-green': { name: 'Hijau', vars: {'--accent-color':'#81c784', '--holiday-color':'#ff8a65'} },
     'theme-purple': { name: 'Ungu', vars: {'--accent-color':'#ce93d8', '--holiday-color':'#ffd54f'} }
   };
-  const themeStyles = document.createElement('style');
-  document.head.appendChild(themeStyles);
-
+  
   addEventBtn.addEventListener("click", () => {
       eventModal.classList.add("active");
       eventForm.reset();
       document.getElementById('eventDate').value = selectedDateStr || new Date().toISOString().slice(0,10);
   });
-  [eventModal, themeModal].forEach(modal => {
+
+  [eventModal, themeModal, eventListModal].forEach(modal => {
     modal.querySelector(".close-btn").addEventListener("click", () => modal.classList.remove("active"));
   });
+  
   themeMenuItem.addEventListener("click", () => themeModal.classList.add("active"));
+  
+  viewEventsBtn.addEventListener("click", () => {
+      renderEventList();
+      eventListModal.classList.add("active");
+  });
   
   document.querySelectorAll('.theme-option').forEach(option => {
     option.addEventListener('click', () => {
@@ -868,16 +1013,52 @@
     if (selectedDateStr === date) updateHolidayDescription();
   });
 
-  holidayDesc.addEventListener('click', function(e) {
-      if (e.target.id === 'deleteEventBtn') {
-          const eventTitle = manualEvents[selectedDateStr]?.title || 'ini';
-          if (confirm(`Apakah Anda yakin ingin menghapus acara "${eventTitle}"?`)) {
-              delete manualEvents[selectedDateStr];
-              showToast("Acara telah dihapus.");
-              simpleRender();
+  // --- Custom Confirm Logic ---
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmBtnYes = document.getElementById('confirmBtnYes');
+  const confirmBtnNo = document.getElementById('confirmBtnNo');
+
+  function showCustomConfirm(message) {
+      return new Promise(resolve => {
+          confirmMessage.textContent = message;
+          confirmModal.classList.add('active');
+          
+          confirmBtnYes.onclick = () => {
+              confirmModal.classList.remove('active');
+              resolve(true);
+          };
+          confirmBtnNo.onclick = () => {
+              confirmModal.classList.remove('active');
+              resolve(false);
+          };
+      });
+  }
+
+  async function handleDelete(date) {
+      if (!manualEvents[date]) return;
+      const eventTitle = manualEvents[date]?.title;
+      const confirmed = await showCustomConfirm(`Apakah Anda yakin ingin menghapus acara "${eventTitle}"?`);
+
+      if (confirmed) {
+          delete manualEvents[date];
+          showToast("Acara telah dihapus.");
+          simpleRender(); // Re-render calendar
+          if (eventListModal.classList.contains('active')) {
+              renderEventList(); // Re-render list if it's open
           }
       }
-  });
+  }
+
+  function setupDeleteListeners() {
+    const container = document.body;
+    container.addEventListener('click', function(e) {
+      const deleteButton = e.target.closest('.delete-btn');
+      if (deleteButton) {
+        const dateToDelete = deleteButton.dataset.date;
+        handleDelete(dateToDelete);
+      }
+    });
+  }
 
   function showToast(msg) {
     toast.textContent = msg;
@@ -886,6 +1067,7 @@
   }
 
   (async function init() {
+    setupDeleteListeners();
     applyTheme('theme-blue');
     selectedDateStr = new Date().toISOString().slice(0,10);
     await simpleRender();
