@@ -1,744 +1,165 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Kalender Libur Nasional</title>
-<style>
-  :root {
-    --bg-color: #1a1a1a;
-    --bg-color-light: #282828;
-    --text-color: #f0f0f0;
-    --text-color-muted: #9e9e9e;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --danger-color: #ff6b6b;
-    --danger-bg-color: rgba(255, 107, 107, 0.1);
-    --warning-color: #ffc107;
-    --warning-bg-color: rgba(255, 193, 7, 0.1);
-    --info-color: #64b5f6; /* New color for reminder icon */
-    --info-bg-color: rgba(100, 181, 246, 0.1); /* New color for reminder icon */
-    --icon-size: 18px;
-  }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
-    overflow-x: hidden;
-    padding-bottom: 50px; /* Space for footer */
-  }
-  header {
-    background: var(--bg-color-light);
-    padding: 12px 16px;
-    user-select: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-  .top-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .month-title {
-    flex: 1;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--accent-color);
-  }
-  .month-btn {
-    background: transparent;
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    font-size: 1.4rem;
-    font-weight: bold;
-    width: 38px;
-    height: 38px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
-  }
-  .month-btn:hover {
-    background-color: rgba(255,255,255,0.05);
-    border-color: var(--accent-color);
-  }
-  .month-btn:active, .control-btn:active {
-    transform: scale(0.95);
-  }
-  .bottom-row {
-    margin-top: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-  }
-  input[type=number] {
-    width: 75px;
-    padding: 6px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background-color: #333;
-    color: var(--text-color);
-    text-align: center;
-    font-size: 1rem;
-    -moz-appearance: textfield;
-  }
-  input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .control-btn {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 8px;
-    background: var(--accent-color);
-    color: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: bold;
-    transition: background-color 0.2s, transform 0.1s;
-  }
-  .control-btn#resetBtn {
-      background: #444;
-      color: var(--text-color);
-  }
-  .control-btn#resetBtn:hover {
-      background: #555;
-  }
-  .calendar {
-    max-width: 600px;
-    margin: 16px auto;
-    padding: 0 10px;
-    touch-action: pan-y;
-    position: relative;
-    overflow: hidden;
-    min-height: 320px;
-  }
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
-  .calendar-grid > div {
-    text-align: center;
-  }
-  .calendar-grid > div.header-day {
-    font-weight: 600;
-    font-size: 0.8rem;
-    padding: 8px 0;
-    color: var(--text-color-muted);
-  }
-  .calendar-grid > div.day {
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    position: relative;
-    outline: none;
-    padding: 4px 4px 12px 4px; /* Adjusted padding for dots */
-  }
-  .calendar-grid > div.day:focus-visible {
-    box-shadow: 0 0 0 2px var(--accent-color);
-  }
-  .calendar-grid > div.day.selected {
-    background-color: var(--accent-color);
-    color: white;
-    font-weight: bold;
-  }
-  .calendar-grid > div.day.today .day-number {
-    border: 2px solid var(--accent-color);
-    color: var(--accent-color);
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-  }
-  .day-number {
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
-      border-radius: 50%;
-      margin: 0 auto;
-      transition: all 0.2s ease;
-  }
-  .calendar-grid > div.day.selected .day-number {
-      border-color: transparent;
-      color: white;
-      background-color: transparent;
-  }
-  .calendar-grid > div.day.is-sunday .day-number {
-    color: var(--holiday-color);
-    font-weight: bold;
-  }
-  .calendar-grid > div.day.is-holiday .day-number {
-    font-weight: bold;
-    color: var(--holiday-color);
-  }
-  .pasaran {
-    display: block;
-    font-size: 0.7rem;
-    line-height: 1; /* Tighter line height */
-    color: var(--text-color-muted);
-    transition: color 0.2s ease;
-  }
-  .day.selected .pasaran {
-      color: rgba(255,255,255,0.8);
-  }
-  .dots-container {
-    position: absolute;
-    bottom: 3px; /* Positioned in the new padding area */
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    pointer-events: none;
-  }
-  .dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-  }
-  .dot.holiday { background-color: var(--holiday-color); }
-  .dot.manual { background-color: var(--accent-color); }
-  .day.selected .dot.manual { background-color: white; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalender Libur Nasional - Tailwind CSS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
 
-  #holidayDescription {
-    max-width: 600px;
-    margin: 12px auto 20px;
-    padding: 16px;
-    font-size: 1rem;
-    border-radius: 12px;
-    background: var(--bg-color-light);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  .desc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-  }
-  .desc-header-actions {
-      display: flex;
-      gap: 4px;
-  }
-  .desc-label {
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 12px;
-    display: inline-block;
-  }
-  .desc-label.national-holiday {
-      color: white;
-      background-color: var(--holiday-color);
-  }
-  .desc-label.manual-event {
-      color: white;
-      background-color: var(--accent-color);
-  }
-  .action-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-color-muted);
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.2s, background-color 0.2s;
-      width: calc(var(--icon-size) + 8px);
-      height: calc(var(--icon-size) + 8px);
-  }
-  .action-btn svg {
-      width: var(--icon-size);
-      height: var(--icon-size);
-      transition: fill 0.2s;
-      fill: var(--text-color-muted);
-  }
-  .action-btn.edit-btn:hover {
-      color: var(--warning-color);
-      background-color: var(--warning-bg-color);
-  }
-  .action-btn.edit-btn:hover svg {
-      fill: var(--warning-color);
-  }
-  .action-btn.delete-btn:hover {
-      color: var(--danger-color);
-      background-color: var(--danger-bg-color);
-  }
-  .action-btn.delete-btn:hover svg {
-      fill: var(--danger-color);
-  }
-   /* New styles for reminder button */
-  .action-btn.reminder-btn:hover {
-      color: var(--info-color);
-      background-color: var(--info-bg-color);
-  }
-  .action-btn.reminder-btn:hover svg, .action-btn.reminder-btn.active svg {
-      fill: var(--info-color);
-  }
-  #holidayDescription .desc-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-top: 6px;
-    margin-bottom: 8px;
-  }
-  #holidayDescription .desc-custom {
-      color: var(--text-color);
-      opacity: 0.9;
-      font-size: 0.95rem;
-      margin-top: 4px;
-      word-wrap: break-word;
-  }
-  #holidayDescription .desc-time {
-    font-weight: bold;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    margin-top: 6px;
-    margin-bottom: -2px;
-  }
-  #holidayDescription .desc-date-info {
-    font-size: 0.9rem;
-    color: var(--text-color-muted);
-    margin-top: 12px;
-  }
-  .animate-desc {
-    animation: slideFade 0.4s cubic-bezier(0.2, 1, 0.3, 1);
-  }
-  @keyframes slideFade {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+      /* Sembunyikan spinner input angka */
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }
+      
+      /* Animasi Keyframe untuk transisi bulan kalender */
+      @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
+      @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+      @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+      @keyframes slide-in-from-left { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 1100; justify-content: center; align-items: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  .modal-overlay.active { display: flex; }
-  .modal-content {
-    background: var(--bg-color-light); color: white; padding: 24px; border-radius: 16px;
-    width: 90%; max-width: 400px; box-sizing: border-box; position: relative;
-    animation: modal-pop 0.4s cubic-bezier(0.2, 1, 0.3, 1);
-    border: 1px solid var(--border-color);
-  }
-  @keyframes modal-pop {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  .close-btn {
-    position: absolute; right: 16px; top: 16px; font-size: 28px;
-    cursor: pointer; color: var(--text-color-muted); user-select: none;
-    transition: color 0.2s ease;
-  }
-  .close-btn:hover { color: white; }
-  
-  #eventModal label, #themeModal h2, #eventListModal h2, #confirmModal h2 { margin-bottom: 16px; }
-  #eventModal label { display: block; margin-top: 16px; font-size: 0.9rem; color: var(--text-color-muted); }
-  #eventModal input[type=date], #eventModal input[type=time], #eventModal input[type=text], #eventModal textarea {
-    width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px;
-    border: 1px solid var(--border-color); background: #333; color: white; box-sizing: border-box; font-size: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  #eventModal input:focus, #eventModal textarea:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.3);
-  }
-  #eventModal textarea { resize: vertical; min-height: 80px; }
-  #eventModal button[type=submit] {
-    margin-top: 24px; background: var(--accent-color); border: none;
-    color: white; padding: 12px; font-weight: bold; border-radius: 8px;
-    cursor: pointer; width: 100%; font-size: 1rem;
-  }
-  /* New style for reminder row in modal */
-  .form-reminder-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-  }
-  .form-reminder-row.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-  
-  #toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: #222; color: white; padding: 12px 20px;
-    border-radius: 8px; opacity: 0; pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.3s ease; font-weight: bold; z-index: 1200;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-  }
-  #toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-
-  #menuToggle {
-    position: fixed; bottom: 20px; right: 20px; background: var(--accent-color);
-    border: none; border-radius: 50%; width: 56px; height: 56px;
-    cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    z-index: 1001; display: flex; align-items: center; justify-content: center;
-    transition: all 0.3s cubic-bezier(.2,.9,.3,1);
-    -webkit-tap-highlight-color: transparent;
-  }
-  #menuToggle:hover { transform: scale(1.08) rotate(15deg); }
-  #menuToggle.open { background-color: #555; transform: scale(1.08) rotate(0deg); }
-  #menuToggle .bar {
-    width: 26px; height: 3px; background: white; border-radius: 2px;
-    position: relative; transition: transform 0.28s ease, background 0.28s ease;
-  }
-  #menuToggle .bar::before, #menuToggle .bar::after {
-    content: ""; position: absolute; left: 0; width: 26px; height: 3px;
-    background: white; border-radius: 2px;
-    transition: transform 0.28s ease, top 0.28s ease, opacity 0.28s ease;
-  }
-  #menuToggle .bar::before { top: -8px; }
-  #menuToggle .bar::after { top: 8px; }
-  #menuToggle.open .bar { background: transparent; }
-  #menuToggle.open .bar::before { transform: rotate(45deg); top: 0; }
-  #menuToggle.open .bar::after { transform: rotate(-45deg); top: 0; }
-
-  #menuPanel {
-    position: fixed; bottom: 88px; right: 20px;
-    background: rgba(38, 38, 38, 0.75);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 18px; padding: 12px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
-    width: 280px; max-width: 90vw;
-    opacity: 0; pointer-events: none;
-    transform: translateY(20px) scale(0.98);
-    transition: opacity 300ms cubic-bezier(0.2, 1, 0.3, 1), transform 300ms cubic-bezier(0.2, 1, 0.3, 1);
-    z-index: 1000;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  #menuPanel.open {
-    opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
-  }
-  
-  .menu-item {
-    display: flex; align-items: center; padding: 10px 12px; border-radius: 12px;
-    transition: background-color 0.2s ease, transform 0.1s;
-  }
-  .menu-item.clickable { cursor: pointer; }
-  .menu-item.clickable:hover { background-color: rgba(255, 255, 255, 0.07); }
-  .menu-item.clickable:active { transform: scale(0.97); }
-  .menu-item svg {
-    width: 22px; height: 22px; margin-right: 16px;
-    flex-shrink: 0; fill: #e0e0e0;
-  }
-  .menu-item > span { flex-grow: 1; color: #f0f0f0; font-weight: 500; }
-
-  .toggle-switch {
-    position: relative; display: inline-block; width: 44px; height: 24px;
-    flex-shrink: 0; cursor: pointer;
-  }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .slider {
-    position: absolute; inset:0; background-color: rgba(255, 255, 255, 0.2);
-    transition: 0.3s; border-radius: 24px;
-  }
-  .slider:before {
-    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-    background-color: white; transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); border-radius: 50%;
-  }
-  input:checked + .slider { background-color: var(--accent-color); }
-  input:checked + .slider:before { transform: translateX(20px); }
-  
-  #currentThemeText {
-    color: var(--accent-color); font-weight: bold; margin-right: 8px;
-  }
-  .chevron-icon { fill: #888; width: 18px; height: 18px; }
-
-  #addEventBtn {
-    display: flex; align-items: center; justify-content: center;
-    gap: 10px; width: 100%; padding: 12px 0; margin-top: 8px;
-    background: var(--accent-color); color: white; border: none;
-    border-radius: 12px; font-weight: bold; font-size: 1rem;
-    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  #addEventBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(var(--accent-color-rgb), 0.3);
-  }
-  #addEventBtn svg { width: 20px; height: 20px; fill: white; }
-
-  .theme-options-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 15px; margin-top: 20px;
-  }
-  .theme-option {
-    position: relative; display: flex; flex-direction: column; align-items: center;
-    gap: 10px; padding: 15px; border-radius: 12px; border: 2px solid #555;
-    cursor: pointer; transition: all 0.2s ease; overflow: hidden;
-  }
-  .theme-option:hover {
-    background-color: rgba(255, 255, 255, 0.08); transform: translateY(-3px);
-  }
-  .theme-option.selected {
-    border-color: var(--accent-color); background-color: rgba(var(--accent-color-rgb), 0.1);
-  }
-  .theme-option .checkmark-icon {
-    display: none; position: absolute; top: 6px; right: 6px; width: 20px; height: 20px;
-    color: var(--accent-color); background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 50%; padding: 2px; box-sizing: border-box;
-  }
-  .theme-option.selected .checkmark-icon {
-    display: block; animation: pop-in 0.3s cubic-bezier(0.2, 1, 0.3, 1);
-  }
-  @keyframes pop-in {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  .color-swatch {
-    width: 48px; height: 48px; border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.7); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  }
-  #swatch-blue { background: linear-gradient(45deg, #90caf9, #64b5f6); }
-  #swatch-green { background: linear-gradient(45deg, #81c784, #66bb6a); }
-  #swatch-purple { background: linear-gradient(45deg, #ba68c8, #ab47bc); }
-
-  /* Event List Modal Styles */
-  #eventListContainer {
-      max-height: 60vh;
-      overflow-y: auto;
-      margin-top: 16px;
-      padding-right: 8px; /* For scrollbar */
-  }
-  .event-list-item {
-      background-color: rgba(255,255,255,0.05);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-  }
-  .event-list-item-info {
-      flex-grow: 1;
-  }
-  .event-list-item-title {
-      font-weight: bold;
-      color: var(--accent-color);
-  }
-  .event-list-item-date {
-      font-size: 0.9rem;
-      color: var(--text-color-muted);
-      margin-bottom: 4px;
-  }
-  .event-list-item-desc {
-      font-size: 0.85rem;
-      opacity: 0.8;
-  }
-  .empty-list-message {
-      text-align: center;
-      padding: 30px;
-      color: var(--text-color-muted);
-  }
-
-  /* Custom Confirm Modal Styles */
-  #confirmModal .modal-content {
-      max-width: 340px;
-  }
-  #confirmMessage {
-      margin: 0;
-      margin-bottom: 24px;
-      font-size: 1.1rem;
-      line-height: 1.5;
-      text-align: center;
-  }
-  .confirm-actions {
-      display: flex;
-      gap: 12px;
-  }
-  .confirm-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
-  }
-  .confirm-btn:hover { opacity: 0.85; }
-  #confirmBtnYes {
-      background-color: var(--danger-color);
-      color: white;
-  }
-  #confirmBtnNo {
-      background-color: #555;
-      color: white;
-  }
-
-  /* NEW: Footer Styles */
-  footer {
-    text-align: center;
-    padding: 20px;
-    margin-top: 20px;
-    font-size: 0.9rem;
-    color: var(--text-color-muted);
-  }
-
-  @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
-  @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-  @keyframes slide-in-from-left { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-  .slide-out-left { animation: slide-out-left 0.25s ease-out forwards; }
-  .slide-in-from-right { animation: slide-in-from-right 0.25s ease-out forwards; }
-  .slide-out-right { animation: slide-out-right 0.25s ease-out forwards; }
-  .slide-in-from-left { animation: slide-in-from-left 0.25s ease-out forwards; }
-  
-  @media (max-width:420px) {
-    #menuToggle { right: 14px; bottom: 18px; width:52px; height:52px; }
-    #menuPanel { right: 12px; width: 88vw; bottom: 80px; }
-    .month-title { font-size: 1.3rem; }
-  }
-
-</style>
+      .slide-out-left { animation: slide-out-left 0.25s ease-out forwards; }
+      .slide-in-from-right { animation: slide-in-from-right 0.25s ease-out forwards; }
+      .slide-out-right { animation: slide-out-right 0.25s ease-out forwards; }
+      .slide-in-from-left { animation: slide-in-from-left 0.25s ease-out forwards; }
+    </style>
 </head>
-<body>
+<body class="bg-[--bg-color] text-[--text-color] transition-colors duration-300 overflow-x-hidden pb-[50px]">
 
-<header>
-  <div class="top-row">
-    <button id="prevMonth" class="month-btn" aria-label="Bulan sebelumnya">⟨</button>
-    <div class="month-title" id="monthYear" aria-live="polite" aria-atomic="true">Loading...</div>
-    <button id="nextMonth" class="month-btn" aria-label="Bulan berikutnya">⟩</button>
+<header class="bg-[--bg-color-light] px-4 py-3 select-none border-b border-[--border-color]">
+  <div class="top-row flex items-center justify-between">
+    <button id="prevMonth" class="month-btn flex items-center justify-center w-[38px] h-[38px] bg-transparent text-[--text-color] border border-[--border-color] rounded-full text-2xl font-bold cursor-pointer transition-all duration-200 active:scale-95 hover:border-[--accent-color] hover:bg-white/5" aria-label="Bulan sebelumnya">⟨</button>
+    <div class="month-title flex-1 text-center text-xl md:text-2xl font-semibold text-[--accent-color]" id="monthYear" aria-live="polite" aria-atomic="true">Loading...</div>
+    <button id="nextMonth" class="month-btn flex items-center justify-center w-[38px] h-[38px] bg-transparent text-[--text-color] border border-[--border-color] rounded-full text-2xl font-bold cursor-pointer transition-all duration-200 active:scale-95 hover:border-[--accent-color] hover:bg-white/5" aria-label="Bulan berikutnya">⟩</button>
   </div>
-  <div class="bottom-row">
-    <input type="number" id="yearInput" min="1900" max="2100" aria-label="Masukkan tahun" />
-    <button id="goYearBtn" class="control-btn">Go</button>
-    <button id="resetBtn" class="control-btn">Hari Ini</button>
+  <div class="bottom-row mt-3 flex justify-center items-center gap-2">
+    <input type="number" id="yearInput" min="1900" max="2100" aria-label="Masukkan tahun" class="w-[75px] p-1.5 rounded-lg border border-[--border-color] bg-[#333] text-[--text-color] text-center text-base" />
+    <button id="goYearBtn" class="control-btn px-3 py-1.5 border-none rounded-lg bg-[--accent-color] text-white cursor-pointer text-sm font-bold transition-all duration-200 active:scale-95">Go</button>
+    <button id="resetBtn" class="control-btn px-3 py-1.5 border-none rounded-lg bg-[#444] text-[--text-color] cursor-pointer text-sm font-bold transition-all duration-200 active:scale-95 hover:bg-[#555]">Hari Ini</button>
   </div>
 </header>
 
-<div class="calendar" role="grid" aria-label="Kalender libur nasional">
-  <div class="calendar-grid" id="calendarDays"></div>
+<div class="calendar max-w-[600px] mx-auto my-4 px-2.5 touch-pan-y relative overflow-hidden min-h-[320px]" role="grid" aria-label="Kalender libur nasional">
+  <div class="calendar-grid grid grid-cols-7 gap-1.5" id="calendarDays"></div>
 </div>
 
-<div id="holidayDescription" role="region" aria-live="polite" aria-atomic="true" style="display:none;"></div>
+<div id="holidayDescription" role="region" aria-live="polite" aria-atomic="true" style="display:none;" class="max-w-[600px] mx-auto my-3 md:my-5 p-4 rounded-xl bg-[--bg-color-light] text-[--text-color] border border-[--border-color] transition-opacity duration-300"></div>
 
-<button id="menuToggle" aria-label="Toggle Menu" aria-expanded="false">
-  <div class="bar" aria-hidden="true"></div>
+<button id="menuToggle" aria-label="Toggle Menu" aria-expanded="false" class="group fixed right-4 bottom-5 md:right-5 md:bottom-5 z-[1001] w-14 h-14 bg-[--accent-color] border-none rounded-full cursor-pointer shadow-lg shadow-black/40 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(.2,.9,.3,1)] hover:scale-105 hover:rotate-15 [&.open]:scale-105 [&.open]:rotate-0 [&.open]:bg-[#555]">
+  <div class="bar relative w-[26px] h-0.5 bg-white rounded-full transition-all duration-200 group-[.open]:bg-transparent before:content-[''] before:absolute before:w-full before:h-full before:bg-white before:rounded-full before:transition-all before:duration-200 before:-translate-y-2 group-[.open]:before:translate-y-0 group-[.open]:before:rotate-45 after:content-[''] after:absolute after:w-full after:h-full after:bg-white after:rounded-full after:transition-all after:duration-200 after:translate-y-2 group-[.open]:after:translate-y-0 group-[.open]:after:-rotate-45">
+  </div>
 </button>
 
-<div id="menuPanel" aria-hidden="true">
-  <div class="menu-item">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V8H4V11H20M20,13H4V16H20V13M18.5,4H17.5V2H15.5V4H8.5V2H6.5V4H5.5A1.5,1.5 0 0,0 4,5.5V18.5A1.5,1.5 0 0,0 5.5,20H18.5A1.5,1.5 0 0,0 20,18.5V5.5A1.5,1.5 0 0,0 18.5,4Z" /></svg>
-    <span>Libur Nasional</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="filterHoliday" checked />
-      <span class="slider"></span>
-    </label>
-  </div>
-  <div class="menu-item">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
-    <span>Acara Anda</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="filterManual" checked />
-      <span class="slider"></span>
-    </label>
-  </div>
-  <div id="themeMenuItem" class="menu-item clickable">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3Z" /></svg>
-    <span>Tema Warna</span>
-    <span id="currentThemeText">Biru</span>
-    <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
-  </div>
-  <div id="viewEventsBtn" class="menu-item clickable">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M9,5V9H21V5M9,19H21V15H9M9,14H21V10H9M4,9H8V5H4M4,19H8V15H4M4,14H8V10H4V14Z" /></svg>
-    <span>Daftar Acara</span>
-  </div>
-  <button id="addEventBtn">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
-    <span>Tambah Acara</span>
-  </button>
-</div>
-
-<div id="eventModal" class="modal-overlay">
-  <div class="modal-content">
-    <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
-    <h2 id="modalTitle">Tambah Acara Anda</h2>
-    <form id="eventForm">
-      <label for="eventDate">Tanggal:</label>
-      <input type="date" id="eventDate" name="eventDate" required />
-      <label for="eventTime">Waktu (opsional):</label>
-      <input type="time" id="eventTime" name="eventTime" />
-      <label for="eventTitle">Judul Acara:</label>
-      <input type="text" id="eventTitle" name="eventTitle" required placeholder="Cth: Ulang tahun teman"/>
-      <label for="eventDesc">Deskripsi (opsional):</label>
-      <textarea id="eventDesc" name="eventDesc" placeholder="Detail acara..."></textarea>
-      
-      <div id="formReminderRow" class="form-reminder-row">
-        <label for="eventReminder" style="margin: 0; color: var(--text-color);">Aktifkan Pengingat</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="eventReminder" />
-          <span class="slider"></span>
+<div id="menuPanel" aria-hidden="true" class="fixed bottom-[88px] right-5 w-[280px] max-w-[90vw] bg-black/50 backdrop-blur-xl backdrop-saturate-150 border border-white/10 rounded-2xl p-3 shadow-2xl shadow-black/50 z-[1000] flex flex-col gap-2 opacity-0 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] transform translate-y-5 scale-95 [&.open]:opacity-100 [&.open]:pointer-events-auto [&.open]:translate-y-0 [&.open]:scale-100">
+    <div class="menu-item flex items-center p-2.5 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-[22px] h-[22px] mr-4 shrink-0 fill-gray-200"><path d="M20,11V8H4V11H20M20,13H4V16H20V13M18.5,4H17.5V2H15.5V4H8.5V2H6.5V4H5.5A1.5,1.5 0 0,0 4,5.5V18.5A1.5,1.5 0 0,0 5.5,20H18.5A1.5,1.5 0 0,0 20,18.5V5.5A1.5,1.5 0 0,0 18.5,4Z" /></svg>
+        <span class="flex-grow text-gray-100 font-medium">Libur Nasional</span>
+        <label class="toggle-switch relative inline-block w-11 h-6 shrink-0 cursor-pointer">
+            <input type="checkbox" id="filterHoliday" class="opacity-0 w-0 h-0 peer" checked />
+            <span class="slider absolute inset-0 bg-white/20 transition-all duration-300 rounded-full before:absolute before:content-[''] before:h-[18px] before:w-[18px] before:left-1 before:bottom-1 before:bg-white before:transition-all before:duration-300 before:ease-[cubic-bezier(0.2,1,0.3,1)] before:rounded-full peer-checked:bg-[--accent-color] peer-checked:before:translate-x-5"></span>
         </label>
-      </div>
-      
-      <button type="submit">Simpan Acara</button>
-    </form>
-  </div>
-</div>
-
-<div id="themeModal" class="modal-overlay">
-  <div class="modal-content">
-    <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
-    <h2>Pilih Tema Warna</h2>
-    <div class="theme-options-grid">
-      <div class="theme-option" data-theme="theme-blue" data-name="Biru">
-        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
-        <div class="color-swatch" id="swatch-blue"></div>
-        <span>Biru</span>
-      </div>
-      <div class="theme-option" data-theme="theme-green" data-name="Hijau">
-        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
-        <div class="color-swatch" id="swatch-green"></div>
-        <span>Hijau</span>
-      </div>
-      <div class="theme-option" data-theme="theme-purple" data-name="Ungu">
-        <svg class="checkmark-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
-        <div class="color-swatch" id="swatch-purple"></div>
-        <span>Ungu</span>
-      </div>
     </div>
-  </div>
+    <div class="menu-item flex items-center p-2.5 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-[22px] h-[22px] mr-4 shrink-0 fill-gray-200"><path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" /></svg>
+        <span class="flex-grow text-gray-100 font-medium">Acara Anda</span>
+        <label class="toggle-switch relative inline-block w-11 h-6 shrink-0 cursor-pointer">
+            <input type="checkbox" id="filterManual" class="opacity-0 w-0 h-0 peer" checked />
+            <span class="slider absolute inset-0 bg-white/20 transition-all duration-300 rounded-full before:absolute before:content-[''] before:h-[18px] before:w-[18px] before:left-1 before:bottom-1 before:bg-white before:transition-all before:duration-300 before:ease-[cubic-bezier(0.2,1,0.3,1)] before:rounded-full peer-checked:bg-[--accent-color] peer-checked:before:translate-x-5"></span>
+        </label>
+    </div>
+    <div id="themeMenuItem" class="menu-item flex items-center p-2.5 rounded-xl transition-all duration-200 cursor-pointer hover:bg-white/10 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-[22px] h-[22px] mr-4 shrink-0 fill-gray-200"><path d="M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3Z" /></svg>
+        <span class="flex-grow text-gray-100 font-medium">Tema Warna</span>
+        <span id="currentThemeText" class="text-[--accent-color] font-bold mr-2">Biru</span>
+        <svg class="chevron-icon w-[18px] h-[18px] fill-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+    </div>
+    <div id="viewEventsBtn" class="menu-item flex items-center p-2.5 rounded-xl transition-all duration-200 cursor-pointer hover:bg-white/10 active:scale-[0.97]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-[22px] h-[22px] mr-4 shrink-0 fill-gray-200"><path d="M9,5V9H21V5M9,19H21V15H9M9,14H21V10H9M4,9H8V5H4M4,19H8V15H4M4,14H8V10H4V14Z" /></svg>
+        <span class="flex-grow text-gray-100 font-medium">Daftar Acara</span>
+    </div>
+    <button id="addEventBtn" class="mt-2 flex items-center justify-center gap-2.5 w-full py-3 bg-[--accent-color] text-white border-none rounded-xl font-bold text-base cursor-pointer shadow-lg shadow-black/20 transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[--accent-color]/30">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 fill-white"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+        <span>Tambah Acara</span>
+    </button>
 </div>
 
-<div id="eventListModal" class="modal-overlay">
-    <div class="modal-content">
-      <span class="close-btn" role="button" aria-label="Tutup">&times;</span>
-      <h2>Daftar Acara Anda</h2>
-      <div id="eventListContainer"></div>
+<div id="eventModal" class="modal-overlay fixed inset-0 z-[1100] bg-black/70 backdrop-blur-md justify-center items-center hidden [&.active]:flex transition-opacity duration-300">
+    <div class="modal-content bg-[--bg-color-light] text-white p-6 rounded-2xl w-[90%] max-w-sm box-border relative border border-[--border-color] opacity-0 scale-95 transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] [.active_&]:opacity-100 [.active_&]:scale-100">
+        <span class="close-btn absolute right-4 top-4 text-3xl cursor-pointer text-gray-500 hover:text-white transition-colors duration-200" role="button" aria-label="Tutup">&times;</span>
+        <h2 id="modalTitle" class="mb-4 text-xl font-semibold">Tambah Acara Anda</h2>
+        <form id="eventForm">
+            <label for="eventDate" class="block mt-4 text-sm text-gray-400">Tanggal:</label>
+            <input type="date" id="eventDate" name="eventDate" required class="w-full p-3 mt-2 rounded-lg border border-[--border-color] bg-[#333] text-white box-border text-base transition-all duration-200 focus:outline-none focus:border-[--accent-color] focus:ring-2 focus:ring-[--accent-color]/40" />
+            <label for="eventTime" class="block mt-4 text-sm text-gray-400">Waktu (opsional):</label>
+            <input type="time" id="eventTime" name="eventTime" class="w-full p-3 mt-2 rounded-lg border border-[--border-color] bg-[#333] text-white box-border text-base transition-all duration-200 focus:outline-none focus:border-[--accent-color] focus:ring-2 focus:ring-[--accent-color]/40" />
+            <label for="eventTitle" class="block mt-4 text-sm text-gray-400">Judul Acara:</label>
+            <input type="text" id="eventTitle" name="eventTitle" required placeholder="Cth: Ulang tahun teman" class="w-full p-3 mt-2 rounded-lg border border-[--border-color] bg-[#333] text-white box-border text-base transition-all duration-200 focus:outline-none focus:border-[--accent-color] focus:ring-2 focus:ring-[--accent-color]/40" />
+            <label for="eventDesc" class="block mt-4 text-sm text-gray-400">Deskripsi (opsional):</label>
+            <textarea id="eventDesc" name="eventDesc" placeholder="Detail acara..." class="w-full p-3 mt-2 rounded-lg border border-[--border-color] bg-[#333] text-white box-border text-base transition-all duration-200 focus:outline-none focus:border-[--accent-color] focus:ring-2 focus:ring-[--accent-color]/40 resize-y min-h-[80px]"></textarea>
+            
+            <div id="formReminderRow" class="form-reminder-row flex justify-between items-center mt-5 p-2.5 bg-white/5 rounded-lg transition-opacity [&.disabled]:opacity-50 [&.disabled]:pointer-events-none">
+                <label for="eventReminder" class="m-0 text-[--text-color]">Aktifkan Pengingat</label>
+                <label class="toggle-switch relative inline-block w-11 h-6 shrink-0 cursor-pointer">
+                    <input type="checkbox" id="eventReminder" class="opacity-0 w-0 h-0 peer" />
+                    <span class="slider absolute inset-0 bg-white/20 transition-all duration-300 rounded-full before:absolute before:content-[''] before:h-[18px] before:w-[18px] before:left-1 before:bottom-1 before:bg-white before:transition-all before:duration-300 before:ease-[cubic-bezier(0.2,1,0.3,1)] before:rounded-full peer-checked:bg-[--accent-color] peer-checked:before:translate-x-5"></span>
+                </label>
+            </div>
+            
+            <button type="submit" class="w-full mt-6 bg-[--accent-color] border-none text-white p-3 font-bold rounded-lg cursor-pointer text-base">Simpan Acara</button>
+        </form>
     </div>
 </div>
 
-<div id="confirmModal" class="modal-overlay">
-    <div class="modal-content">
-        <p id="confirmMessage"></p>
-        <div class="confirm-actions">
-            <button id="confirmBtnNo" class="confirm-btn">Batal</button>
-            <button id="confirmBtnYes" class="confirm-btn">Ya, Hapus</button>
+<div id="themeModal" class="modal-overlay fixed inset-0 z-[1100] bg-black/70 backdrop-blur-md justify-center items-center hidden [&.active]:flex transition-opacity duration-300">
+    <div class="modal-content bg-[--bg-color-light] text-white p-6 rounded-2xl w-[90%] max-w-sm box-border relative border border-[--border-color] opacity-0 scale-95 transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] [.active_&]:opacity-100 [.active_&]:scale-100">
+        <span class="close-btn absolute right-4 top-4 text-3xl cursor-pointer text-gray-500 hover:text-white transition-colors duration-200" role="button" aria-label="Tutup">&times;</span>
+        <h2 class="mb-4 text-xl font-semibold">Pilih Tema Warna</h2>
+        <div class="theme-options-grid grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 mt-5">
+            <div class="theme-option relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-[#555] cursor-pointer transition-all duration-200 hover:bg-white/10 hover:-translate-y-1 [&.selected]:border-[--accent-color] [&.selected]:bg-[--accent-color]/10" data-theme="theme-blue" data-name="Biru">
+                <svg class="checkmark-icon absolute top-1.5 right-1.5 w-5 h-5 text-[--accent-color] bg-white/90 rounded-full p-0.5 hidden [&.selected]:block" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+                <div class="color-swatch w-12 h-12 rounded-full border-2 border-white/70 shadow-md" style="background: linear-gradient(45deg, #90caf9, #64b5f6);"></div>
+                <span>Biru</span>
+            </div>
+            <div class="theme-option relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-[#555] cursor-pointer transition-all duration-200 hover:bg-white/10 hover:-translate-y-1 [&.selected]:border-[--accent-color] [&.selected]:bg-[--accent-color]/10" data-theme="theme-green" data-name="Hijau">
+                <svg class="checkmark-icon absolute top-1.5 right-1.5 w-5 h-5 text-[--accent-color] bg-white/90 rounded-full p-0.5 hidden [&.selected]:block" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+                <div class="color-swatch w-12 h-12 rounded-full border-2 border-white/70 shadow-md" style="background: linear-gradient(45deg, #81c784, #66bb6a);"></div>
+                <span>Hijau</span>
+            </div>
+            <div class="theme-option relative flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-[#555] cursor-pointer transition-all duration-200 hover:bg-white/10 hover:-translate-y-1 [&.selected]:border-[--accent-color] [&.selected]:bg-[--accent-color]/10" data-theme="theme-purple" data-name="Ungu">
+                <svg class="checkmark-icon absolute top-1.5 right-1.5 w-5 h-5 text-[--accent-color] bg-white/90 rounded-full p-0.5 hidden [&.selected]:block" viewBox="0 0 24 24"><path fill="currentColor" d="M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41-1.41L9,16.17z"></path></svg>
+                <div class="color-swatch w-12 h-12 rounded-full border-2 border-white/70 shadow-md" style="background: linear-gradient(45deg, #ba68c8, #ab47bc);"></div>
+                <span>Ungu</span>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="toast"></div>
+<div id="eventListModal" class="modal-overlay fixed inset-0 z-[1100] bg-black/70 backdrop-blur-md justify-center items-center hidden [&.active]:flex transition-opacity duration-300">
+    <div class="modal-content bg-[--bg-color-light] text-white p-6 rounded-2xl w-[90%] max-w-lg box-border relative border border-[--border-color] opacity-0 scale-95 transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] [.active_&]:opacity-100 [.active_&]:scale-100">
+      <span class="close-btn absolute right-4 top-4 text-3xl cursor-pointer text-gray-500 hover:text-white transition-colors duration-200" role="button" aria-label="Tutup">&times;</span>
+      <h2 class="mb-4 text-xl font-semibold">Daftar Acara Anda</h2>
+      <div id="eventListContainer" class="max-h-[60vh] overflow-y-auto mt-4 pr-2"></div>
+    </div>
+</div>
 
-<footer id="copyright-footer"></footer>
+<div id="confirmModal" class="modal-overlay fixed inset-0 z-[1200] bg-black/70 backdrop-blur-md justify-center items-center hidden [&.active]:flex transition-opacity duration-300">
+    <div class="modal-content bg-[--bg-color-light] text-white p-6 rounded-2xl w-[90%] max-w-xs box-border relative border border-[--border-color] opacity-0 scale-95 transition-all duration-300 ease-[cubic-bezier(0.2,1,0.3,1)] [.active_&]:opacity-100 [.active_&]:scale-100">
+        <p id="confirmMessage" class="m-0 mb-6 text-lg leading-relaxed text-center"></p>
+        <div class="confirm-actions flex gap-3">
+            <button id="confirmBtnNo" class="flex-1 p-2.5 rounded-lg border-none font-bold text-base cursor-pointer transition-opacity hover:opacity-85 bg-[#555] text-white">Batal</button>
+            <button id="confirmBtnYes" class="flex-1 p-2.5 rounded-lg border-none font-bold text-base cursor-pointer transition-opacity hover:opacity-85 bg-[--danger-color] text-white">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#222] text-white px-5 py-3 rounded-lg pointer-events-none transition-all duration-300 font-bold z-[1200] border border-[--border-color] shadow-2xl shadow-black/40 opacity-0 translate-y-4 [&.show]:opacity-100 [&.show]:pointer-events-auto [&.show]:translate-y-0"></div>
+
+<footer id="copyright-footer" class="text-center p-5 mt-5 text-sm text-gray-500"></footer>
 
 <script>
   // NOTE: Jika data libur nasional tidak muncul, kemungkinan besar kunci API di bawah ini sudah tidak aktif.
@@ -773,16 +194,15 @@
   const eventListModal = document.getElementById("eventListModal");
   const eventListContainer = document.getElementById("eventListContainer");
   const confirmModal = document.getElementById("confirmModal");
-  const formReminderRow = document.getElementById("formReminderRow"); // NEW
-  const eventReminder = document.getElementById("eventReminder"); // NEW
-  const eventTimeInput = document.getElementById("eventTime"); // NEW
+  const formReminderRow = document.getElementById("formReminderRow");
+  const eventReminder = document.getElementById("eventReminder");
+  const eventTimeInput = document.getElementById("eventTime");
   
   // SVGs for action buttons
-  const editIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25Z" /></svg>`;
-  const deleteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
-  // NEW: SVGs for reminder icons
-  const reminderIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16.5V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.93 6,11V16.5L4,18V19H20V18L18,16.5Z"/></svg>`;
-  const reminderOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M2.76,3.87L1.49,5.14L6,9.65V11C6,7.93 7.64,5.36 10.5,4.68V4A1.5,1.5 0 0,1 12,2.5A1.5,1.5 0 0,1 13.5,4V4.68C14.1,4.82 14.67,5.03 15.2,5.3L18.87,8.96L20.14,7.69L19.29,6.84C19.29,6.84 19.3,6.85 19.3,6.85L18.6,6.14L19.29,6.85L21,5.14L19.86,4L18,5.86L17.41,5.27C15.63,3.87 13.43,3.06 11,3.06C8.24,3.06 5.8,4.12 4.14,5.77L2.76,3.87M18,16.5V11.82L12.18,6L11.5,6.68L9.82,5C9.2,4.43 8.44,4 7.5,4C7.38,4 7.25,4 7.13,4.03C6.1,4.5 5.2,5.27 4.58,6.2L6.17,7.79C6.54,7.2 7,6.76 7.5,6.46V6.44L16,14.94V16.5L18,18V19H7.82L9.82,21H10A2,2 0 0,0 12,22A2,2 0 0,0 14,20H18.18L20.73,22.55L22,21.28L4,3.55L2.73,2.28L4,3.55M16.5,18L4.5,6L3.23,4.73L2,6L4,8V16.5L2,18V19H14.18L12.18,17H4.5V16H11.18L16,11.18V8.5L14.5,7L13,8.5L11.5,7L10,8.5L8.5,7L7,8.5L5.5,7L4.5,8L6.5,10H6.5L14.5,18H16.5Z"/></svg>`;
+  const editIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] transition-colors fill-current group-hover:fill-[--warning-color]" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25Z" /></svg>`;
+  const deleteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] transition-colors fill-current group-hover:fill-[--danger-color]" viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
+  const reminderIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] transition-colors fill-current group-hover:fill-[--info-color] [.active_&]:fill-[--info-color]" viewBox="0 0 24 24"><path d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16.5V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.93 6,11V16.5L4,18V19H20V18L18,16.5Z"/></svg>`;
+  const reminderOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px] transition-colors fill-current group-hover:fill-[--info-color]" viewBox="0 0 24 24"><path d="M2.76,3.87L1.49,5.14L6,9.65V11C6,7.93 7.64,5.36 10.5,4.68V4A1.5,1.5 0 0,1 12,2.5A1.5,1.5 0 0,1 13.5,4V4.68C14.1,4.82 14.67,5.03 15.2,5.3L18.87,8.96L20.14,7.69L19.29,6.84C19.29,6.84 19.3,6.85 19.3,6.85L18.6,6.14L19.29,6.85L21,5.14L19.86,4L18,5.86L17.41,5.27C15.63,3.87 13.43,3.06 11,3.06C8.24,3.06 5.8,4.12 4.14,5.77L2.76,3.87M18,16.5V11.82L12.18,6L11.5,6.68L9.82,5C9.2,4.43 8.44,4 7.5,4C7.38,4 7.25,4 7.13,4.03C6.1,4.5 5.2,5.27 4.58,6.2L6.17,7.79C6.54,7.2 7,6.76 7.5,6.46V6.44L16,14.94V16.5L18,18V19H7.82L9.82,21H10A2,2 0 0,0 12,22A2,2 0 0,0 14,20H18.18L20.73,22.55L22,21.28L4,3.55L2.73,2.28L4,3.55M16.5,18L4.5,6L3.23,4.73L2,6L4,8V16.5L2,18V19H14.18L12.18,17H4.5V16H11.18L16,11.18V8.5L14.5,7L13,8.5L11.5,7L10,8.5L8.5,7L7,8.5L5.5,7L4.5,8L6.5,10H6.5L14.5,18H16.5Z"/></svg>`;
 
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
@@ -812,7 +232,7 @@
   function formatDateDMY(dateStr) {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    date.setUTCHours(12); // Prevent timezone issues
+    date.setUTCHours(12);
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
@@ -821,7 +241,7 @@
     const targetDate = new Date(dateStr); targetDate.setHours(0,0,0,0);
     return Math.round((targetDate - today) / (1000 * 60 * 60 * 24));
   }
-
+  
   function renderCalendar() {
     calendarGrid.innerHTML = "";
     const year = currentDate.getFullYear();
@@ -830,7 +250,7 @@
     document.getElementById("monthYear").textContent = currentDate.toLocaleString("id-ID", { month: "long", year: "numeric" });
     document.getElementById("yearInput").value = year;
 
-    dayNames.forEach(d => { calendarGrid.innerHTML += `<div class="header-day">${d}</div>`; });
+    dayNames.forEach(d => { calendarGrid.innerHTML += `<div class="header-day text-center font-semibold text-xs py-2 text-[--text-color-muted]">${d}</div>`; });
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) { calendarGrid.innerHTML += `<div></div>`; }
@@ -839,30 +259,44 @@
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
       const dateObj = new Date(year, month, day);
-      const classes = ["day"];
       const isHoliday = holidays[dateStr] !== undefined;
       const hasManualEvent = manualEvents[dateStr] !== undefined;
       const showHoliday = filterHoliday.checked && isHoliday;
       const showManual = filterManual.checked && hasManualEvent;
       
-      if (dateObj.getDay() === 0) classes.push("is-sunday");
-      if (showHoliday) classes.push("is-holiday");
-      if (+dateObj === +today) classes.push("today");
-      if (selectedDateStr === dateStr) classes.push("selected");
+      const dayClasses = ['day', 'text-center', 'rounded-lg', 'cursor-pointer', 'transition-colors', 'duration-200', 'relative', 'p-1', 'pb-3', 'outline-none', 'focus-visible:ring-2', 'focus-visible:ring-offset-2', 'focus-visible:ring-offset-[--bg-color]', 'focus-visible:ring-[--accent-color]'];
+      if (dateObj.getDay() === 0) dayClasses.push("is-sunday");
+      if (showHoliday) dayClasses.push("is-holiday");
+      if (+dateObj === +today) dayClasses.push("today");
+      if (selectedDateStr === dateStr) dayClasses.push("selected");
       
       const pasaran = getPasaranJawa(dateObj);
-      let dotsHTML = '<div class="dots-container">';
-      if (showHoliday) dotsHTML += '<span class="dot holiday"></span>';
-      if (showManual) dotsHTML += '<span class="dot manual"></span>';
+      let dotsHTML = '<div class="dots-container absolute bottom-[3px] left-0 right-0 flex justify-center gap-1 pointer-events-none">';
+      if (showHoliday) dotsHTML += '<span class="dot holiday w-[5px] h-[5px] rounded-full bg-[--holiday-color]"></span>';
+      if (showManual) dotsHTML += '<span class="dot manual w-[5px] h-[5px] rounded-full bg-[--accent-color]"></span>';
       dotsHTML += '</div>';
 
       calendarGrid.innerHTML += `
-        <div class="${classes.join(" ")}" data-date="${dateStr}" tabindex="0" role="button">
-          <div class="day-number">${day}</div>
-          <div class="pasaran">${pasaran}</div>
+        <div class="${dayClasses.join(" ")}" data-date="${dateStr}" tabindex="0" role="button">
+          <div class="day-number w-7 h-7 leading-7 rounded-full mx-auto transition-all duration-200">
+            ${day}
+          </div>
+          <div class="pasaran block text-xs leading-tight text-[--text-color-muted] transition-colors duration-200">
+            ${pasaran}
+          </div>
           ${dotsHTML}
         </div>`;
     }
+    // Apply Tailwind classes based on state classes
+    document.querySelectorAll('.day.is-sunday .day-number').forEach(el => el.classList.add('text-[--holiday-color]', 'font-bold'));
+    document.querySelectorAll('.day.is-holiday .day-number').forEach(el => el.classList.add('font-bold', 'text-[--holiday-color]'));
+    document.querySelectorAll('.day.today .day-number').forEach(el => el.classList.add('border-2', 'border-[--accent-color]', 'text-[--accent-color]', 'bg-[rgba(var(--accent-color-rgb),0.1)]'));
+    document.querySelectorAll('.day.selected').forEach(el => {
+        el.classList.add('bg-[--accent-color]', 'text-white', 'font-bold');
+        el.querySelector('.pasaran')?.classList.add('text-white/80');
+        el.querySelector('.dot.manual')?.classList.add('bg-white');
+        el.querySelector('.day-number')?.classList.add('border-transparent', 'bg-transparent', 'text-white');
+    });
 
     document.querySelectorAll(".day").forEach(dayEl => {
       dayEl.addEventListener("click", () => {
@@ -879,7 +313,7 @@
       });
     });
   }
-  
+
   function updateHolidayDescription() {
     holidayDesc.style.display = "none";
     holidayDesc.innerHTML = "";
@@ -895,29 +329,31 @@
     const isHoliday = filterHoliday.checked && holidays[selectedDateStr];
     const event = filterManual.checked ? manualEvents[selectedDateStr] : null;
 
+    const actionBtnBaseClasses = "group action-btn bg-transparent border-none cursor-pointer p-1 rounded-full flex items-center justify-center transition-colors duration-200";
+
     if (isHoliday) {
         contentHTML += `<div>
-            <div class="desc-header">
-                <div class="desc-label national-holiday">Libur Nasional</div>
+            <div class="flex justify-between items-center gap-2">
+                <div class="inline-block text-xs font-bold uppercase px-2 py-0.5 rounded-full text-white bg-[--holiday-color]">Libur Nasional</div>
             </div>
-            <div class="desc-title">${holidays[selectedDateStr]}</div>
+            <div class="text-lg font-semibold mt-1.5 mb-2">${holidays[selectedDateStr]}</div>
         </div>`;
     }
     if (event) {
-        const timeHTML = event.time ? `<div class="desc-time">Pukul ${event.time}</div>` : '';
-        const descHTML = event.desc ? `<div class="desc-custom">${event.desc.replace(/\n/g, '<br>')}</div>` : '';
-        const reminderBtnHTML = event.time ? `<button class="action-btn reminder-btn ${event.reminder ? 'active' : ''}" data-date="${selectedDateStr}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : '';
+        const timeHTML = event.time ? `<div class="font-bold text-base mt-1.5 mb-[-2px]">Pukul ${event.time}</div>` : '';
+        const descHTML = event.desc ? `<div class="text-white/90 text-sm mt-1 break-words">${event.desc.replace(/\n/g, '<br>')}</div>` : '';
+        const reminderBtnHTML = event.time ? `<button class="${actionBtnBaseClasses} reminder-btn hover:bg-[--info-bg-color] ${event.reminder ? 'active' : ''}" data-date="${selectedDateStr}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : '';
 
-        contentHTML += `<div style="margin-top: ${isHoliday ? '16px' : '0'};">
-            <div class="desc-header">
-                <div class="desc-label manual-event">Acara Anda</div>
-                <div class="desc-header-actions">
+        contentHTML += `<div class="${isHoliday ? 'mt-4' : 'mt-0'}">
+            <div class="flex justify-between items-center gap-2">
+                <div class="inline-block text-xs font-bold uppercase px-2 py-0.5 rounded-full text-white bg-[--accent-color]">Acara Anda</div>
+                <div class="flex gap-1">
                     ${reminderBtnHTML}
-                    <button class="action-btn edit-btn" data-date="${selectedDateStr}" title="Edit Acara">${editIconSVG}</button>
-                    <button class="action-btn delete-btn" data-date="${selectedDateStr}" title="Hapus Acara">${deleteIconSVG}</button>
+                    <button class="${actionBtnBaseClasses} edit-btn hover:bg-[--warning-bg-color]" data-date="${selectedDateStr}" title="Edit Acara">${editIconSVG}</button>
+                    <button class="${actionBtnBaseClasses} delete-btn hover:bg-[--danger-bg-color]" data-date="${selectedDateStr}" title="Hapus Acara">${deleteIconSVG}</button>
                 </div>
             </div>
-            <div class="desc-title">${event.title}</div>
+            <div class="text-lg font-semibold mt-1.5 mb-0">${event.title}</div>
             ${timeHTML}
             ${descHTML}
         </div>`;
@@ -927,10 +363,10 @@
     void holidayDesc.offsetWidth;
     
     if (contentHTML) {
-      holidayDesc.innerHTML = `${contentHTML}<div class="desc-date-info">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
+      holidayDesc.innerHTML = `${contentHTML}<div class="text-sm text-[--text-color-muted] mt-3">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
       holidayDesc.style.display = "block";
     } else {
-      holidayDesc.innerHTML = `<div class="desc-date-info">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
+      holidayDesc.innerHTML = `<div class="text-sm text-[--text-color-muted]">${formatDateDMY(selectedDateStr)} • ${diffText}</div>`;
       holidayDesc.style.display = "block";
     }
     holidayDesc.classList.add("animate-desc");
@@ -971,28 +407,29 @@
       const sortedDates = Object.keys(manualEvents).sort((a,b) => new Date(a) - new Date(b));
 
       if (sortedDates.length === 0) {
-          eventListContainer.innerHTML = `<div class="empty-list-message">Belum ada acara yang ditambahkan.</div>`;
+          eventListContainer.innerHTML = `<div class="empty-list-message text-center p-8 text-[--text-color-muted]">Belum ada acara yang ditambahkan.</div>`;
           return;
       }
       
+      const actionBtnBaseClasses = "group action-btn bg-transparent border-none cursor-pointer p-1 rounded-full flex items-center justify-center transition-colors duration-200";
+
       sortedDates.forEach(date => {
           const event = manualEvents[date];
           const timeInfo = event.time ? ` • Pukul ${event.time}` : '';
-          // NEW: Add reminder button to event list
-          const reminderBtnHTML = event.time ? `<button class="action-btn reminder-btn ${event.reminder ? 'active' : ''}" data-date="${date}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : '<div style="width: 26px;"></div>'; // Placeholder for alignment
+          const reminderBtnHTML = event.time ? `<button class="${actionBtnBaseClasses} reminder-btn hover:bg-[--info-bg-color] ${event.reminder ? 'active' : ''}" data-date="${date}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : `<div style="width: calc(18px + 0.5rem)"></div>`;
 
           const item = document.createElement('div');
-          item.className = 'event-list-item';
+          item.className = 'event-list-item bg-white/5 p-3 rounded-lg mb-3 flex items-center gap-3';
           item.innerHTML = `
-              <div class="event-list-item-info">
-                  <div class="event-list-item-date">${formatDateDMY(date)}${timeInfo}</div>
-                  <div class="event-list-item-title">${event.title}</div>
-                  ${event.desc ? `<div class="event-list-item-desc">${event.desc.substring(0, 50)}${event.desc.length > 50 ? '...' : ''}</div>` : ''}
+              <div class="event-list-item-info flex-grow">
+                  <div class="event-list-item-date text-sm text-[--text-color-muted] mb-1">${formatDateDMY(date)}${timeInfo}</div>
+                  <div class="event-list-item-title font-bold text-[--accent-color]">${event.title}</div>
+                  ${event.desc ? `<div class="event-list-item-desc text-sm opacity-80">${event.desc.substring(0, 50)}${event.desc.length > 50 ? '...' : ''}</div>` : ''}
               </div>
-              <div class="desc-header-actions">
+              <div class="desc-header-actions flex gap-1">
                   ${reminderBtnHTML}
-                  <button class="action-btn edit-btn" data-date="${date}" title="Edit Acara">${editIconSVG}</button>
-                  <button class="action-btn delete-btn" data-date="${date}" title="Hapus Acara">${deleteIconSVG}</button>
+                  <button class="${actionBtnBaseClasses} edit-btn hover:bg-[--warning-bg-color]" data-date="${date}" title="Edit Acara">${editIconSVG}</button>
+                  <button class="${actionBtnBaseClasses} delete-btn hover:bg-[--danger-bg-color]" data-date="${date}" title="Hapus Acara">${deleteIconSVG}</button>
               </div>
           `;
           eventListContainer.appendChild(item);
@@ -1001,24 +438,15 @@
   
   // Local Storage & Persistence
   function saveManualEvents() {
-      try {
-          localStorage.setItem('manualEvents', JSON.stringify(manualEvents));
-      } catch (e) {
-          console.error("Gagal menyimpan acara:", e);
-          showToast("Gagal menyimpan acara ke local storage.");
-      }
+      try { localStorage.setItem('manualEvents', JSON.stringify(manualEvents)); } 
+      catch (e) { console.error("Gagal menyimpan acara:", e); showToast("Gagal menyimpan acara ke local storage."); }
   }
 
   function loadManualEvents() {
       try {
           const savedEvents = localStorage.getItem('manualEvents');
-          if (savedEvents) {
-              manualEvents = JSON.parse(savedEvents);
-          }
-      } catch (e) {
-          console.error("Gagal memuat acara:", e);
-          manualEvents = {};
-      }
+          if (savedEvents) { manualEvents = JSON.parse(savedEvents); }
+      } catch (e) { console.error("Gagal memuat acara:", e); manualEvents = {}; }
   }
   
   // Event Listener
@@ -1035,17 +463,11 @@
   };
 
   let touchStartX=0;
-  calendarContainer.addEventListener("touchstart", e => {
-      if(isAnimating) return;
-      touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
-
+  calendarContainer.addEventListener("touchstart", e => { if(isAnimating) return; touchStartX = e.changedTouches[0].screenX; }, {passive: true});
   calendarContainer.addEventListener("touchend", e => { 
     if(isAnimating) return;
-    const touchEndX = e.changedTouches[0].screenX;
-    const deltaX = touchEndX - touchStartX;
-    if (deltaX > 50) { changeMonth('prev'); } 
-    else if (deltaX < -50) { changeMonth('next'); }
+    const deltaX = e.changedTouches[0].screenX - touchStartX;
+    if (deltaX > 50) { changeMonth('prev'); } else if (deltaX < -50) { changeMonth('next'); }
   });
   
   menuToggle.addEventListener("click", () => {
@@ -1055,7 +477,7 @@
     menuPanel.setAttribute("aria-hidden", !isOpen);
   });
 
-  [filterHoliday, filterManual].forEach(el => el.addEventListener("change", () => { simpleRender(); }));
+  [filterHoliday, filterManual].forEach(el => el.addEventListener("change", () => simpleRender() ));
   
   function getRGB(colorStr) {
       const d = document.createElement("div");
@@ -1067,22 +489,33 @@
   }
 
   function applyTheme(themeName) {
-    document.body.className = '';
-    document.body.classList.add(themeName);
     const themeData = themes[themeName];
-    Object.keys(themeData.vars).forEach(key => {
-        document.documentElement.style.setProperty(key, themeData.vars[key]);
-    });
+    // Define all CSS variables for the theme
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--bg-color', '#1a1a1a');
+    rootStyle.setProperty('--bg-color-light', '#282828');
+    rootStyle.setProperty('--text-color', '#f0f0f0');
+    rootStyle.setProperty('--text-color-muted', '#9e9e9e');
+    rootStyle.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
+    rootStyle.setProperty('--danger-color', '#ff6b6b');
+    rootStyle.setProperty('--danger-bg-color', 'rgba(255, 107, 107, 0.1)');
+    rootStyle.setProperty('--warning-color', '#ffc107');
+    rootStyle.setProperty('--warning-bg-color', 'rgba(255, 193, 7, 0.1)');
+    rootStyle.setProperty('--info-color', '#64b5f6');
+    rootStyle.setProperty('--info-bg-color', 'rgba(100, 181, 246, 0.1)');
+    
+    // Override with theme-specific variables
+    Object.keys(themeData.vars).forEach(key => rootStyle.setProperty(key, themeData.vars[key]));
+    
     const accentColor = themeData.vars['--accent-color'];
-    document.documentElement.style.setProperty('--accent-color-rgb', getRGB(accentColor));
+    rootStyle.setProperty('--accent-color-rgb', getRGB(accentColor));
+    
     currentThemeText.textContent = themeData.name;
     document.querySelectorAll('.theme-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.theme === themeName);
     });
-    localStorage.setItem('calendarTheme', themeName); // Save theme
-    if(document.body.getAttribute('data-initialized')) {
-        simpleRender();
-    }
+    localStorage.setItem('calendarTheme', themeName);
+    if(document.body.getAttribute('data-initialized')) { simpleRender(); }
   }
   
   const themes = {
@@ -1096,15 +529,12 @@
       eventForm.removeAttribute('data-edit-date');
       modalTitle.textContent = "Tambah Acara Anda";
       document.getElementById('eventDate').value = selectedDateStr || new Date().toISOString().slice(0,10);
-      updateReminderRowState(); // NEW
+      updateReminderRowState();
       eventModal.classList.add("active");
   });
 
   [eventModal, themeModal, eventListModal, confirmModal].forEach(modal => {
-    const closeBtn = modal.querySelector(".close-btn");
-    if(closeBtn) {
-        closeBtn.addEventListener("click", () => modal.classList.remove("active"));
-    }
+    modal.querySelector(".close-btn")?.addEventListener("click", () => modal.classList.remove("active"));
   });
   
   themeMenuItem.addEventListener("click", () => themeModal.classList.add("active"));
@@ -1121,22 +551,13 @@
     });
   });
 
-  // NEW: Update reminder row based on time input
   eventTimeInput.addEventListener('input', updateReminderRowState);
   function updateReminderRowState() {
-      if (eventTimeInput.value) {
-          formReminderRow.classList.remove('disabled');
-      } else {
-          formReminderRow.classList.add('disabled');
-          eventReminder.checked = false;
-      }
+      formReminderRow.classList.toggle('disabled', !eventTimeInput.value);
+      if (!eventTimeInput.value) { eventReminder.checked = false; }
   }
-  // NEW: Request notification permission
-  eventReminder.addEventListener('change', async () => {
-      if(eventReminder.checked) {
-          await requestNotificationPermission();
-      }
-  });
+
+  eventReminder.addEventListener('change', async () => { if(eventReminder.checked) await requestNotificationPermission() });
 
   eventForm.addEventListener("submit", e => {
     e.preventDefault();
@@ -1145,18 +566,13 @@
     const title = eventForm.eventTitle.value.trim();
     const desc = eventForm.eventDesc.value.trim();
     const time = eventForm.eventTime.value;
-    const reminder = eventReminder.checked; // NEW
+    const reminder = eventReminder.checked;
     
-    if (!newDate || !title) { 
-        showToast("Tanggal dan Judul wajib diisi."); 
-        return; 
-    }
+    if (!newDate || !title) { showToast("Tanggal dan Judul wajib diisi."); return; }
 
-    if (originalDate && originalDate !== newDate) {
-        delete manualEvents[originalDate];
-    }
+    if (originalDate && originalDate !== newDate) { delete manualEvents[originalDate]; }
     
-    manualEvents[newDate] = { title, desc, time, reminder }; // MODIFIED
+    manualEvents[newDate] = { title, desc, time, reminder };
     saveManualEvents();
     
     eventModal.classList.remove("active");
@@ -1167,22 +583,17 @@
     updateHolidayDescription();
   });
 
-  // Action Button Handlers (Edit, Delete)
   function handleEdit(date) {
-    const event = manualEvents[date];
-    if (!event) return;
-
+    const event = manualEvents[date]; if (!event) return;
     eventForm.reset();
     modalTitle.textContent = "Edit Acara Anda";
-    eventForm.dataset.editDate = date; // Set edit mode
-    
+    eventForm.dataset.editDate = date;
     eventForm.eventDate.value = date;
     eventForm.eventTitle.value = event.title;
     eventForm.eventTime.value = event.time || '';
     eventForm.eventDesc.value = event.desc || '';
-    eventReminder.checked = event.reminder || false; // NEW
-    updateReminderRowState(); // NEW
-    
+    eventReminder.checked = event.reminder || false;
+    updateReminderRowState();
     eventModal.classList.add("active");
   }
 
@@ -1193,83 +604,49 @@
 
       if (confirmed) {
           delete manualEvents[date];
-          saveManualEvents(); // Save changes
+          saveManualEvents();
           showToast("Acara telah dihapus.");
-          // If the deleted event was the selected one, clear the description
-          if (selectedDateStr === date) {
-              updateHolidayDescription();
-          }
-          simpleRender(); // Re-render calendar
-          if (eventListModal.classList.contains('active')) {
-              renderEventList(); // Re-render list if it's open
-          }
+          if (selectedDateStr === date) updateHolidayDescription();
+          simpleRender();
+          if (eventListModal.classList.contains('active')) renderEventList();
       }
   }
 
-  // NEW: Handle reminder toggle
   async function handleReminderToggle(date) {
-    const event = manualEvents[date];
-    if (!event || !event.time) return;
-
-    if (!event.reminder) { // If turning reminder ON
+    const event = manualEvents[date]; if (!event || !event.time) return;
+    if (!event.reminder) {
       const permissionGranted = await requestNotificationPermission();
-      if (!permissionGranted) {
-        showToast("Izin notifikasi diperlukan.");
-        return;
-      }
+      if (!permissionGranted) { showToast("Izin notifikasi diperlukan."); return; }
     }
-    
     event.reminder = !event.reminder;
     saveManualEvents();
     showToast(`Pengingat ${event.reminder ? 'diaktifkan' : 'dinonaktifkan'}.`);
-
-    // Re-render relevant parts
     updateHolidayDescription();
-    if (eventListModal.classList.contains('active')) {
-        renderEventList();
-    }
+    if (eventListModal.classList.contains('active')) renderEventList();
   }
 
   function setupActionListeners() {
     document.body.addEventListener('click', function(e) {
-      const button = e.target.closest('.action-btn');
-      if (!button) return;
-
+      const button = e.target.closest('.action-btn'); if (!button) return;
       e.stopPropagation();
       const date = button.dataset.date;
-      if (button.classList.contains('edit-btn')) {
-        handleEdit(date);
-      } else if (button.classList.contains('delete-btn')) {
-        handleDelete(date);
-      } else if (button.classList.contains('reminder-btn')) { // NEW
-        handleReminderToggle(date);
-      }
+      if (button.classList.contains('edit-btn')) handleEdit(date);
+      else if (button.classList.contains('delete-btn')) handleDelete(date);
+      else if (button.classList.contains('reminder-btn')) handleReminderToggle(date);
     });
   }
 
-  // Custom Confirm Modal
-  const confirmMessage = document.getElementById('confirmMessage');
-  const confirmBtnYes = document.getElementById('confirmBtnYes');
-  const confirmBtnNo = document.getElementById('confirmBtnNo');
   let confirmResolve = null;
-
   function showCustomConfirm(message) {
       return new Promise(resolve => {
           confirmResolve = resolve;
-          confirmMessage.innerHTML = message;
+          document.getElementById('confirmMessage').innerHTML = message;
           confirmModal.classList.add('active');
       });
   }
 
-  confirmBtnYes.addEventListener('click', () => {
-      if(confirmResolve) confirmResolve(true);
-      confirmModal.classList.remove('active');
-  });
-
-  confirmBtnNo.addEventListener('click', () => {
-      if(confirmResolve) confirmResolve(false);
-      confirmModal.classList.remove('active');
-  });
+  document.getElementById('confirmBtnYes').addEventListener('click', () => { if(confirmResolve) confirmResolve(true); confirmModal.classList.remove('active'); });
+  document.getElementById('confirmBtnNo').addEventListener('click', () => { if(confirmResolve) confirmResolve(false); confirmModal.classList.remove('active'); });
 
   function showToast(msg) {
     toast.textContent = msg;
@@ -1277,15 +654,9 @@
     setTimeout(() => toast.classList.remove("show"), 2500);
   }
 
-  // NEW: NOTIFICATION SYSTEM
   async function requestNotificationPermission() {
-    if (!("Notification" in window)) {
-        showToast("Browser ini tidak mendukung notifikasi.");
-        return false;
-    }
-    if (Notification.permission === 'granted') {
-        return true;
-    }
+    if (!("Notification" in window)) { showToast("Browser ini tidak mendukung notifikasi."); return false; }
+    if (Notification.permission === 'granted') return true;
     if (Notification.permission !== 'denied') {
         const permission = await Notification.requestPermission();
         return permission === 'granted';
@@ -1295,53 +666,43 @@
 
   function showNotification(title, options) {
       if (Notification.permission === 'granted') {
-          navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(title, options);
-          });
+          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options));
       }
   }
 
   function checkEventNotifications() {
       const now = new Date();
       const todayStr = now.toISOString().slice(0, 10);
-      const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+      const currentTimeStr = now.toTimeString().slice(0, 5);
 
       const event = manualEvents[todayStr];
       if (event && event.reminder && event.time === currentTimeStr) {
-          // Prevent re-notifying within the same minute if checker runs frequently
           if (event.lastNotified !== currentTimeStr) { 
               console.log(`Menampilkan notifikasi untuk: ${event.title}`);
-              showNotification("Pengingat Acara", {
-                  body: `${event.title} dimulai sekarang.`,
-                  icon: './favicon.ico', // You might want to add an icon
-                  vibrate: [200, 100, 200]
-              });
-              event.lastNotified = currentTimeStr; // Mark as notified for this minute
+              showNotification("Pengingat Acara", { body: `${event.title} dimulai sekarang.`, icon: './favicon.ico', vibrate: [200, 100, 200] });
+              event.lastNotified = currentTimeStr;
           }
       }
   }
   
-  // NEW: Add copyright and start notification checker
   function setCopyright() {
-    const footer = document.getElementById('copyright-footer');
     const currentYear = new Date().getFullYear();
-    footer.innerHTML = `&copy; ${currentYear} Kalender Libur Nasional. All Rights Reserved.`;
+    document.getElementById('copyright-footer').innerHTML = `&copy; ${currentYear} Kalender Libur Nasional. All Rights Reserved.`;
   }
 
   (async function init() {
-    loadManualEvents(); // Load events from localStorage
+    loadManualEvents();
     setupActionListeners();
-    setCopyright(); // NEW
+    setCopyright();
     const savedTheme = localStorage.getItem('calendarTheme') || 'theme-blue';
-    applyTheme(savedTheme); // Apply theme but don't re-render yet
+    applyTheme(savedTheme);
     
     selectedDateStr = new Date().toISOString().slice(0,10);
-    await simpleRender(); // Fetch data and do the first render
+    await simpleRender();
     document.body.setAttribute('data-initialized', 'true');
     
-    // Start notification checker to run every minute
-    setInterval(checkEventNotifications, 60000); // 60000 ms = 1 minute
-    checkEventNotifications(); // check immediately on load
+    setInterval(checkEventNotifications, 60000);
+    checkEventNotifications();
   })();
 </script>
 
