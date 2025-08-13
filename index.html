@@ -15,6 +15,8 @@
     --danger-bg-color: rgba(255, 107, 107, 0.1);
     --warning-color: #ffc107;
     --warning-bg-color: rgba(255, 193, 7, 0.1);
+    --info-color: #64b5f6; /* New color for reminder icon */
+    --info-bg-color: rgba(100, 181, 246, 0.1); /* New color for reminder icon */
     --icon-size: 18px;
   }
   body {
@@ -24,6 +26,7 @@
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
     overflow-x: hidden;
+    padding-bottom: 50px; /* Space for footer */
   }
   header {
     background: var(--bg-color-light);
@@ -271,6 +274,14 @@
   .action-btn.delete-btn:hover svg {
       fill: var(--danger-color);
   }
+   /* New styles for reminder button */
+  .action-btn.reminder-btn:hover {
+      color: var(--info-color);
+      background-color: var(--info-bg-color);
+  }
+  .action-btn.reminder-btn:hover svg, .action-btn.reminder-btn.active svg {
+      fill: var(--info-color);
+  }
   #holidayDescription .desc-title {
     font-size: 1.25rem;
     font-weight: 600;
@@ -345,6 +356,20 @@
     margin-top: 24px; background: var(--accent-color); border: none;
     color: white; padding: 12px; font-weight: bold; border-radius: 8px;
     cursor: pointer; width: 100%; font-size: 1rem;
+  }
+  /* New style for reminder row in modal */
+  .form-reminder-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+  }
+  .form-reminder-row.disabled {
+    opacity: 0.5;
+    pointer-events: none;
   }
   
   #toast {
@@ -557,6 +582,15 @@
       color: white;
   }
 
+  /* NEW: Footer Styles */
+  footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: var(--text-color-muted);
+  }
+
   @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
   @keyframes slide-in-from-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes slide-out-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
@@ -646,6 +680,15 @@
       <input type="text" id="eventTitle" name="eventTitle" required placeholder="Cth: Ulang tahun teman"/>
       <label for="eventDesc">Deskripsi (opsional):</label>
       <textarea id="eventDesc" name="eventDesc" placeholder="Detail acara..."></textarea>
+      
+      <div id="formReminderRow" class="form-reminder-row">
+        <label for="eventReminder" style="margin: 0; color: var(--text-color);">Aktifkan Pengingat</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="eventReminder" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      
       <button type="submit">Simpan Acara</button>
     </form>
   </div>
@@ -695,6 +738,8 @@
 
 <div id="toast"></div>
 
+<footer id="copyright-footer"></footer>
+
 <script>
   // NOTE: Jika data libur nasional tidak muncul, kemungkinan besar kunci API di bawah ini sudah tidak aktif.
   // Ganti dengan kunci API Google Calendar Anda sendiri untuk memperbaikinya.
@@ -728,10 +773,16 @@
   const eventListModal = document.getElementById("eventListModal");
   const eventListContainer = document.getElementById("eventListContainer");
   const confirmModal = document.getElementById("confirmModal");
+  const formReminderRow = document.getElementById("formReminderRow"); // NEW
+  const eventReminder = document.getElementById("eventReminder"); // NEW
+  const eventTimeInput = document.getElementById("eventTime"); // NEW
   
   // SVGs for action buttons
   const editIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25Z" /></svg>`;
   const deleteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
+  // NEW: SVGs for reminder icons
+  const reminderIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16.5V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.93 6,11V16.5L4,18V19H20V18L18,16.5Z"/></svg>`;
+  const reminderOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M2.76,3.87L1.49,5.14L6,9.65V11C6,7.93 7.64,5.36 10.5,4.68V4A1.5,1.5 0 0,1 12,2.5A1.5,1.5 0 0,1 13.5,4V4.68C14.1,4.82 14.67,5.03 15.2,5.3L18.87,8.96L20.14,7.69L19.29,6.84C19.29,6.84 19.3,6.85 19.3,6.85L18.6,6.14L19.29,6.85L21,5.14L19.86,4L18,5.86L17.41,5.27C15.63,3.87 13.43,3.06 11,3.06C8.24,3.06 5.8,4.12 4.14,5.77L2.76,3.87M18,16.5V11.82L12.18,6L11.5,6.68L9.82,5C9.2,4.43 8.44,4 7.5,4C7.38,4 7.25,4 7.13,4.03C6.1,4.5 5.2,5.27 4.58,6.2L6.17,7.79C6.54,7.2 7,6.76 7.5,6.46V6.44L16,14.94V16.5L18,18V19H7.82L9.82,21H10A2,2 0 0,0 12,22A2,2 0 0,0 14,20H18.18L20.73,22.55L22,21.28L4,3.55L2.73,2.28L4,3.55M16.5,18L4.5,6L3.23,4.73L2,6L4,8V16.5L2,18V19H14.18L12.18,17H4.5V16H11.18L16,11.18V8.5L14.5,7L13,8.5L11.5,7L10,8.5L8.5,7L7,8.5L5.5,7L4.5,8L6.5,10H6.5L14.5,18H16.5Z"/></svg>`;
 
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
@@ -855,10 +906,13 @@
     if (event) {
         const timeHTML = event.time ? `<div class="desc-time">Pukul ${event.time}</div>` : '';
         const descHTML = event.desc ? `<div class="desc-custom">${event.desc.replace(/\n/g, '<br>')}</div>` : '';
+        const reminderBtnHTML = event.time ? `<button class="action-btn reminder-btn ${event.reminder ? 'active' : ''}" data-date="${selectedDateStr}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : '';
+
         contentHTML += `<div style="margin-top: ${isHoliday ? '16px' : '0'};">
             <div class="desc-header">
                 <div class="desc-label manual-event">Acara Anda</div>
                 <div class="desc-header-actions">
+                    ${reminderBtnHTML}
                     <button class="action-btn edit-btn" data-date="${selectedDateStr}" title="Edit Acara">${editIconSVG}</button>
                     <button class="action-btn delete-btn" data-date="${selectedDateStr}" title="Hapus Acara">${deleteIconSVG}</button>
                 </div>
@@ -924,6 +978,9 @@
       sortedDates.forEach(date => {
           const event = manualEvents[date];
           const timeInfo = event.time ? ` • Pukul ${event.time}` : '';
+          // NEW: Add reminder button to event list
+          const reminderBtnHTML = event.time ? `<button class="action-btn reminder-btn ${event.reminder ? 'active' : ''}" data-date="${date}" title="Toggle Pengingat">${event.reminder ? reminderIconSVG : reminderOffIconSVG}</button>` : '<div style="width: 26px;"></div>'; // Placeholder for alignment
+
           const item = document.createElement('div');
           item.className = 'event-list-item';
           item.innerHTML = `
@@ -933,6 +990,7 @@
                   ${event.desc ? `<div class="event-list-item-desc">${event.desc.substring(0, 50)}${event.desc.length > 50 ? '...' : ''}</div>` : ''}
               </div>
               <div class="desc-header-actions">
+                  ${reminderBtnHTML}
                   <button class="action-btn edit-btn" data-date="${date}" title="Edit Acara">${editIconSVG}</button>
                   <button class="action-btn delete-btn" data-date="${date}" title="Hapus Acara">${deleteIconSVG}</button>
               </div>
@@ -1038,6 +1096,7 @@
       eventForm.removeAttribute('data-edit-date');
       modalTitle.textContent = "Tambah Acara Anda";
       document.getElementById('eventDate').value = selectedDateStr || new Date().toISOString().slice(0,10);
+      updateReminderRowState(); // NEW
       eventModal.classList.add("active");
   });
 
@@ -1062,6 +1121,23 @@
     });
   });
 
+  // NEW: Update reminder row based on time input
+  eventTimeInput.addEventListener('input', updateReminderRowState);
+  function updateReminderRowState() {
+      if (eventTimeInput.value) {
+          formReminderRow.classList.remove('disabled');
+      } else {
+          formReminderRow.classList.add('disabled');
+          eventReminder.checked = false;
+      }
+  }
+  // NEW: Request notification permission
+  eventReminder.addEventListener('change', async () => {
+      if(eventReminder.checked) {
+          await requestNotificationPermission();
+      }
+  });
+
   eventForm.addEventListener("submit", e => {
     e.preventDefault();
     const originalDate = eventForm.dataset.editDate;
@@ -1069,6 +1145,7 @@
     const title = eventForm.eventTitle.value.trim();
     const desc = eventForm.eventDesc.value.trim();
     const time = eventForm.eventTime.value;
+    const reminder = eventReminder.checked; // NEW
     
     if (!newDate || !title) { 
         showToast("Tanggal dan Judul wajib diisi."); 
@@ -1079,7 +1156,7 @@
         delete manualEvents[originalDate];
     }
     
-    manualEvents[newDate] = { title, desc, time };
+    manualEvents[newDate] = { title, desc, time, reminder }; // MODIFIED
     saveManualEvents();
     
     eventModal.classList.remove("active");
@@ -1103,6 +1180,8 @@
     eventForm.eventTitle.value = event.title;
     eventForm.eventTime.value = event.time || '';
     eventForm.eventDesc.value = event.desc || '';
+    eventReminder.checked = event.reminder || false; // NEW
+    updateReminderRowState(); // NEW
     
     eventModal.classList.add("active");
   }
@@ -1116,12 +1195,39 @@
           delete manualEvents[date];
           saveManualEvents(); // Save changes
           showToast("Acara telah dihapus.");
+          // If the deleted event was the selected one, clear the description
+          if (selectedDateStr === date) {
+              updateHolidayDescription();
+          }
           simpleRender(); // Re-render calendar
-          updateHolidayDescription(); // Update description panel
           if (eventListModal.classList.contains('active')) {
               renderEventList(); // Re-render list if it's open
           }
       }
+  }
+
+  // NEW: Handle reminder toggle
+  async function handleReminderToggle(date) {
+    const event = manualEvents[date];
+    if (!event || !event.time) return;
+
+    if (!event.reminder) { // If turning reminder ON
+      const permissionGranted = await requestNotificationPermission();
+      if (!permissionGranted) {
+        showToast("Izin notifikasi diperlukan.");
+        return;
+      }
+    }
+    
+    event.reminder = !event.reminder;
+    saveManualEvents();
+    showToast(`Pengingat ${event.reminder ? 'diaktifkan' : 'dinonaktifkan'}.`);
+
+    // Re-render relevant parts
+    updateHolidayDescription();
+    if (eventListModal.classList.contains('active')) {
+        renderEventList();
+    }
   }
 
   function setupActionListeners() {
@@ -1135,6 +1241,8 @@
         handleEdit(date);
       } else if (button.classList.contains('delete-btn')) {
         handleDelete(date);
+      } else if (button.classList.contains('reminder-btn')) { // NEW
+        handleReminderToggle(date);
       }
     });
   }
@@ -1169,15 +1277,71 @@
     setTimeout(() => toast.classList.remove("show"), 2500);
   }
 
+  // NEW: NOTIFICATION SYSTEM
+  async function requestNotificationPermission() {
+    if (!("Notification" in window)) {
+        showToast("Browser ini tidak mendukung notifikasi.");
+        return false;
+    }
+    if (Notification.permission === 'granted') {
+        return true;
+    }
+    if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+    }
+    return false;
+  }
+
+  function showNotification(title, options) {
+      if (Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(title, options);
+          });
+      }
+  }
+
+  function checkEventNotifications() {
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const currentTimeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+
+      const event = manualEvents[todayStr];
+      if (event && event.reminder && event.time === currentTimeStr) {
+          // Prevent re-notifying within the same minute if checker runs frequently
+          if (event.lastNotified !== currentTimeStr) { 
+              console.log(`Menampilkan notifikasi untuk: ${event.title}`);
+              showNotification("Pengingat Acara", {
+                  body: `${event.title} dimulai sekarang.`,
+                  icon: './favicon.ico', // You might want to add an icon
+                  vibrate: [200, 100, 200]
+              });
+              event.lastNotified = currentTimeStr; // Mark as notified for this minute
+          }
+      }
+  }
+  
+  // NEW: Add copyright and start notification checker
+  function setCopyright() {
+    const footer = document.getElementById('copyright-footer');
+    const currentYear = new Date().getFullYear();
+    footer.innerHTML = `&copy; ${currentYear} Kalender Libur Nasional. All Rights Reserved.`;
+  }
+
   (async function init() {
     loadManualEvents(); // Load events from localStorage
     setupActionListeners();
+    setCopyright(); // NEW
     const savedTheme = localStorage.getItem('calendarTheme') || 'theme-blue';
     applyTheme(savedTheme); // Apply theme but don't re-render yet
     
     selectedDateStr = new Date().toISOString().slice(0,10);
     await simpleRender(); // Fetch data and do the first render
     document.body.setAttribute('data-initialized', 'true');
+    
+    // Start notification checker to run every minute
+    setInterval(checkEventNotifications, 60000); // 60000 ms = 1 minute
+    checkEventNotifications(); // check immediately on load
   })();
 </script>
 
