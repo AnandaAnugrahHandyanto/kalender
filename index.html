@@ -13,6 +13,8 @@
     --border-color: rgba(255, 255, 255, 0.1);
     --danger-color: #ff6b6b;
     --danger-bg-color: rgba(255, 107, 107, 0.1);
+    --warning-color: #ffc107;
+    --warning-bg-color: rgba(255, 193, 7, 0.1);
     --icon-size: 18px;
   }
   body {
@@ -215,6 +217,10 @@
       align-items: center;
       gap: 8px;
   }
+  .desc-header-actions {
+      display: flex;
+      gap: 4px;
+  }
   .desc-label {
     font-size: 0.8rem;
     font-weight: bold;
@@ -231,7 +237,7 @@
       color: white;
       background-color: var(--accent-color);
   }
-  .delete-btn {
+  .action-btn {
       background: transparent;
       border: none;
       color: var(--text-color-muted);
@@ -245,19 +251,24 @@
       width: calc(var(--icon-size) + 8px);
       height: calc(var(--icon-size) + 8px);
   }
-  .delete-btn:hover {
-      color: var(--danger-color);
-      background-color: var(--danger-bg-color);
-  }
-  .delete-icon {
+  .action-btn svg {
       width: var(--icon-size);
       height: var(--icon-size);
       transition: fill 0.2s;
-  }
-  .delete-btn .delete-icon {
       fill: var(--text-color-muted);
   }
-  .delete-btn:hover .delete-icon {
+  .action-btn.edit-btn:hover {
+      color: var(--warning-color);
+      background-color: var(--warning-bg-color);
+  }
+  .action-btn.edit-btn:hover svg {
+      fill: var(--warning-color);
+  }
+  .action-btn.delete-btn:hover {
+      color: var(--danger-color);
+      background-color: var(--danger-bg-color);
+  }
+  .action-btn.delete-btn:hover svg {
       fill: var(--danger-color);
   }
   #holidayDescription .desc-title {
@@ -272,6 +283,13 @@
       font-size: 0.95rem;
       margin-top: 4px;
       word-wrap: break-word;
+  }
+  #holidayDescription .desc-time {
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin-top: 6px;
+    margin-bottom: -2px;
   }
   #holidayDescription .desc-date-info {
     font-size: 0.9rem;
@@ -312,7 +330,7 @@
   
   #eventModal label, #themeModal h2, #eventListModal h2, #confirmModal h2 { margin-bottom: 16px; }
   #eventModal label { display: block; margin-top: 16px; font-size: 0.9rem; color: var(--text-color-muted); }
-  #eventModal input[type=date], #eventModal input[type=text], #eventModal textarea {
+  #eventModal input[type=date], #eventModal input[type=time], #eventModal input[type=text], #eventModal textarea {
     width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px;
     border: 1px solid var(--border-color); background: #333; color: white; box-sizing: border-box; font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -622,6 +640,8 @@
     <form id="eventForm">
       <label for="eventDate">Tanggal:</label>
       <input type="date" id="eventDate" name="eventDate" required />
+      <label for="eventTime">Waktu (opsional):</label>
+      <input type="time" id="eventTime" name="eventTime" />
       <label for="eventTitle">Judul Acara:</label>
       <input type="text" id="eventTitle" name="eventTitle" required placeholder="Cth: Ulang tahun teman"/>
       <label for="eventDesc">Deskripsi (opsional):</label>
@@ -676,7 +696,9 @@
 <div id="toast"></div>
 
 <script>
-  const apiKey = "AIzaSyCHdJfqVSd-1rQ1wbbp7uaJwk9Ty2iWRAE";
+  // NOTE: Jika data libur nasional tidak muncul, kemungkinan besar kunci API di bawah ini sudah tidak aktif.
+  // Ganti dengan kunci API Google Calendar Anda sendiri untuk memperbaikinya.
+  const apiKey = "AIzaSyCHdJfqVSd-1rQ1wbbp7uaJwk9Ty2iWRAE"; 
   const calendarId = "id.indonesian#holiday@group.v.calendar.google.com";
   const dayNames = ["MIN","SEN","SEL","RAB","KAM","JUM","SAB"];
   const pasaranJawa = ["Legi","Pahing","Pon","Wage","Kliwon"];
@@ -697,6 +719,7 @@
   const addEventBtn = document.getElementById("addEventBtn");
   const eventModal = document.getElementById("eventModal");
   const eventForm = document.getElementById("eventForm");
+  const modalTitle = document.getElementById("modalTitle");
   const toast = document.getElementById("toast");
   const themeModal = document.getElementById("themeModal");
   const themeMenuItem = document.getElementById("themeMenuItem");
@@ -705,7 +728,10 @@
   const eventListModal = document.getElementById("eventListModal");
   const eventListContainer = document.getElementById("eventListContainer");
   const confirmModal = document.getElementById("confirmModal");
-  const addIconSVG = `<svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
+  
+  // SVGs for action buttons
+  const editIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25Z" /></svg>`;
+  const deleteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" /></svg>`;
 
   function getPasaranJawa(date) {
     const refDate = new Date(2023, 0, 1);
@@ -816,7 +842,7 @@
 
     let contentHTML = '';
     const isHoliday = filterHoliday.checked && holidays[selectedDateStr];
-    const hasManualEvent = filterManual.checked && manualEvents[selectedDateStr];
+    const event = filterManual.checked ? manualEvents[selectedDateStr] : null;
 
     if (isHoliday) {
         contentHTML += `<div>
@@ -826,16 +852,20 @@
             <div class="desc-title">${holidays[selectedDateStr]}</div>
         </div>`;
     }
-    if (hasManualEvent) {
+    if (event) {
+        const timeHTML = event.time ? `<div class="desc-time">Pukul ${event.time}</div>` : '';
+        const descHTML = event.desc ? `<div class="desc-custom">${event.desc.replace(/\n/g, '<br>')}</div>` : '';
         contentHTML += `<div style="margin-top: ${isHoliday ? '16px' : '0'};">
             <div class="desc-header">
                 <div class="desc-label manual-event">Acara Anda</div>
-                <button class="delete-btn" data-date="${selectedDateStr}" title="Hapus Acara">
-                  ${addIconSVG}
-                </button>
+                <div class="desc-header-actions">
+                    <button class="action-btn edit-btn" data-date="${selectedDateStr}" title="Edit Acara">${editIconSVG}</button>
+                    <button class="action-btn delete-btn" data-date="${selectedDateStr}" title="Hapus Acara">${deleteIconSVG}</button>
+                </div>
             </div>
-            <div class="desc-title">${manualEvents[selectedDateStr].title}</div>
-            ${manualEvents[selectedDateStr].desc ? `<div class="desc-custom">${manualEvents[selectedDateStr].desc.replace(/\n/g, '<br>')}</div>` : ''}
+            <div class="desc-title">${event.title}</div>
+            ${timeHTML}
+            ${descHTML}
         </div>`;
     }
     
@@ -884,7 +914,7 @@
 
   function renderEventList() {
       eventListContainer.innerHTML = '';
-      const sortedDates = Object.keys(manualEvents).sort();
+      const sortedDates = Object.keys(manualEvents).sort((a,b) => new Date(a) - new Date(b));
 
       if (sortedDates.length === 0) {
           eventListContainer.innerHTML = `<div class="empty-list-message">Belum ada acara yang ditambahkan.</div>`;
@@ -893,23 +923,47 @@
       
       sortedDates.forEach(date => {
           const event = manualEvents[date];
+          const timeInfo = event.time ? ` • Pukul ${event.time}` : '';
           const item = document.createElement('div');
           item.className = 'event-list-item';
           item.innerHTML = `
               <div class="event-list-item-info">
-                  <div class="event-list-item-date">${formatDateDMY(date)}</div>
+                  <div class="event-list-item-date">${formatDateDMY(date)}${timeInfo}</div>
                   <div class="event-list-item-title">${event.title}</div>
                   ${event.desc ? `<div class="event-list-item-desc">${event.desc.substring(0, 50)}${event.desc.length > 50 ? '...' : ''}</div>` : ''}
               </div>
-              <button class="delete-btn" data-date="${date}" title="Hapus Acara">
-                ${addIconSVG}
-              </button>
+              <div class="desc-header-actions">
+                  <button class="action-btn edit-btn" data-date="${date}" title="Edit Acara">${editIconSVG}</button>
+                  <button class="action-btn delete-btn" data-date="${date}" title="Hapus Acara">${deleteIconSVG}</button>
+              </div>
           `;
           eventListContainer.appendChild(item);
       });
   }
   
-  // --- Event Listeners ---
+  // Local Storage & Persistence
+  function saveManualEvents() {
+      try {
+          localStorage.setItem('manualEvents', JSON.stringify(manualEvents));
+      } catch (e) {
+          console.error("Gagal menyimpan acara:", e);
+          showToast("Gagal menyimpan acara ke local storage.");
+      }
+  }
+
+  function loadManualEvents() {
+      try {
+          const savedEvents = localStorage.getItem('manualEvents');
+          if (savedEvents) {
+              manualEvents = JSON.parse(savedEvents);
+          }
+      } catch (e) {
+          console.error("Gagal memuat acara:", e);
+          manualEvents = {};
+      }
+  }
+  
+  // Event Listener
   document.getElementById("prevMonth").onclick = () => changeMonth('prev');
   document.getElementById("nextMonth").onclick = () => changeMonth('next');
   document.getElementById("goYearBtn").onclick = () => { 
@@ -967,7 +1021,10 @@
     document.querySelectorAll('.theme-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.theme === themeName);
     });
-    simpleRender();
+    localStorage.setItem('calendarTheme', themeName); // Save theme
+    if(document.body.getAttribute('data-initialized')) {
+        simpleRender();
+    }
   }
   
   const themes = {
@@ -977,13 +1034,18 @@
   };
   
   addEventBtn.addEventListener("click", () => {
-      eventModal.classList.add("active");
       eventForm.reset();
+      eventForm.removeAttribute('data-edit-date');
+      modalTitle.textContent = "Tambah Acara Anda";
       document.getElementById('eventDate').value = selectedDateStr || new Date().toISOString().slice(0,10);
+      eventModal.classList.add("active");
   });
 
-  [eventModal, themeModal, eventListModal].forEach(modal => {
-    modal.querySelector(".close-btn").addEventListener("click", () => modal.classList.remove("active"));
+  [eventModal, themeModal, eventListModal, confirmModal].forEach(modal => {
+    const closeBtn = modal.querySelector(".close-btn");
+    if(closeBtn) {
+        closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+    }
   });
   
   themeMenuItem.addEventListener("click", () => themeModal.classList.add("active"));
@@ -1002,63 +1064,104 @@
 
   eventForm.addEventListener("submit", e => {
     e.preventDefault();
-    const date = eventForm.eventDate.value;
+    const originalDate = eventForm.dataset.editDate;
+    const newDate = eventForm.eventDate.value;
     const title = eventForm.eventTitle.value.trim();
     const desc = eventForm.eventDesc.value.trim();
-    if (!date || !title) { showToast("Tanggal dan Judul wajib diisi."); return; }
-    manualEvents[date] = { title, desc };
+    const time = eventForm.eventTime.value;
+    
+    if (!newDate || !title) { 
+        showToast("Tanggal dan Judul wajib diisi."); 
+        return; 
+    }
+
+    if (originalDate && originalDate !== newDate) {
+        delete manualEvents[originalDate];
+    }
+    
+    manualEvents[newDate] = { title, desc, time };
+    saveManualEvents();
+    
     eventModal.classList.remove("active");
-    showToast(`Acara "${title}" disimpan.`);
+    showToast(originalDate ? "Acara telah diperbarui." : "Acara baru disimpan.");
+    
+    selectedDateStr = newDate;
     simpleRender();
-    if (selectedDateStr === date) updateHolidayDescription();
+    updateHolidayDescription();
   });
 
-  // --- Custom Confirm Logic ---
-  const confirmMessage = document.getElementById('confirmMessage');
-  const confirmBtnYes = document.getElementById('confirmBtnYes');
-  const confirmBtnNo = document.getElementById('confirmBtnNo');
+  // Action Button Handlers (Edit, Delete)
+  function handleEdit(date) {
+    const event = manualEvents[date];
+    if (!event) return;
 
-  function showCustomConfirm(message) {
-      return new Promise(resolve => {
-          confirmMessage.textContent = message;
-          confirmModal.classList.add('active');
-          
-          confirmBtnYes.onclick = () => {
-              confirmModal.classList.remove('active');
-              resolve(true);
-          };
-          confirmBtnNo.onclick = () => {
-              confirmModal.classList.remove('active');
-              resolve(false);
-          };
-      });
+    eventForm.reset();
+    modalTitle.textContent = "Edit Acara Anda";
+    eventForm.dataset.editDate = date; // Set edit mode
+    
+    eventForm.eventDate.value = date;
+    eventForm.eventTitle.value = event.title;
+    eventForm.eventTime.value = event.time || '';
+    eventForm.eventDesc.value = event.desc || '';
+    
+    eventModal.classList.add("active");
   }
 
   async function handleDelete(date) {
       if (!manualEvents[date]) return;
       const eventTitle = manualEvents[date]?.title;
-      const confirmed = await showCustomConfirm(`Apakah Anda yakin ingin menghapus acara "${eventTitle}"?`);
+      const confirmed = await showCustomConfirm(`Apakah Anda yakin ingin menghapus acara <br><b>"${eventTitle}"</b>?`);
 
       if (confirmed) {
           delete manualEvents[date];
+          saveManualEvents(); // Save changes
           showToast("Acara telah dihapus.");
           simpleRender(); // Re-render calendar
+          updateHolidayDescription(); // Update description panel
           if (eventListModal.classList.contains('active')) {
               renderEventList(); // Re-render list if it's open
           }
       }
   }
 
-  function setupDeleteListeners() {
-    const container = document.body;
-    container.addEventListener('click', function(e) {
-      const deleteButton = e.target.closest('.delete-btn');
-      if (deleteButton) {
-        const dateToDelete = deleteButton.dataset.date;
-        handleDelete(dateToDelete);
+  function setupActionListeners() {
+    document.body.addEventListener('click', function(e) {
+      const button = e.target.closest('.action-btn');
+      if (!button) return;
+
+      e.stopPropagation();
+      const date = button.dataset.date;
+      if (button.classList.contains('edit-btn')) {
+        handleEdit(date);
+      } else if (button.classList.contains('delete-btn')) {
+        handleDelete(date);
       }
     });
   }
+
+  // Custom Confirm Modal
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmBtnYes = document.getElementById('confirmBtnYes');
+  const confirmBtnNo = document.getElementById('confirmBtnNo');
+  let confirmResolve = null;
+
+  function showCustomConfirm(message) {
+      return new Promise(resolve => {
+          confirmResolve = resolve;
+          confirmMessage.innerHTML = message;
+          confirmModal.classList.add('active');
+      });
+  }
+
+  confirmBtnYes.addEventListener('click', () => {
+      if(confirmResolve) confirmResolve(true);
+      confirmModal.classList.remove('active');
+  });
+
+  confirmBtnNo.addEventListener('click', () => {
+      if(confirmResolve) confirmResolve(false);
+      confirmModal.classList.remove('active');
+  });
 
   function showToast(msg) {
     toast.textContent = msg;
@@ -1067,10 +1170,14 @@
   }
 
   (async function init() {
-    setupDeleteListeners();
-    applyTheme('theme-blue');
+    loadManualEvents(); // Load events from localStorage
+    setupActionListeners();
+    const savedTheme = localStorage.getItem('calendarTheme') || 'theme-blue';
+    applyTheme(savedTheme); // Apply theme but don't re-render yet
+    
     selectedDateStr = new Date().toISOString().slice(0,10);
-    await simpleRender();
+    await simpleRender(); // Fetch data and do the first render
+    document.body.setAttribute('data-initialized', 'true');
   })();
 </script>
 
